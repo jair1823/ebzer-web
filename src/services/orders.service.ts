@@ -13,6 +13,9 @@ export const ordersService = {
   updateOrder: async (orderId: string, orderData: any) => {
     return api.put(`/orders/${orderId}`, orderData);
   },
+  finishOrder: async (orderId: string) => {
+    return api.post(`/orders/${orderId}/finish`, {});
+  },
   deleteOrder: async (orderId: string) => {
     return api.delete(`/orders/${orderId}`);
   },

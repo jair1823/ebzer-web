@@ -25,6 +25,7 @@ export const CreateOrderForm: React.FC<{
   updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
   toggleModal: () => void;
   openCreateOrder: () => void;
+  finishOrder: (orderId: number) => void;
 }> = ({
   isOpen = false,
   selectedOrder,
@@ -32,6 +33,7 @@ export const CreateOrderForm: React.FC<{
   updateOrder,
   toggleModal,
   openCreateOrder,
+  finishOrder,
 }) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
 
@@ -171,7 +173,7 @@ export const CreateOrderForm: React.FC<{
                     htmlFor="description"
                     className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
                   >
-                    Descripción (text)
+                    Descripción
                   </label>
                   <input
                     name="description"
@@ -270,7 +272,6 @@ export const CreateOrderForm: React.FC<{
                         {[
                           { value: "pending", label: "Pendiente" },
                           { value: "completed", label: "Completado" },
-                          { value: "paid", label: "Pagado" },
                         ].map((option) => {
                           const isActive = formData.status === option.value;
 
@@ -368,13 +369,25 @@ export const CreateOrderForm: React.FC<{
                   Cancelar
                 </button>
 
-                <button
-                  type="submit"
-                  className="inline-flex items-center rounded-lg bg-emerald-300 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400/70 disabled:cursor-not-allowed disabled:opacity-70"
-                  disabled={!validateForm()}
-                >
-                  {selectedOrder ? "Editar pedido" : "Crear pedido"}
-                </button>
+                <div className="flex items-center gap-4">
+                  {selectedOrder && (
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-lg bg-red-300/80 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-400/80 disabled:cursor-not-allowed disabled:opacity-70"
+                      onClick={() => finishOrder(selectedOrder.id)}
+                    >
+                      Finalizar
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="inline-flex items-center rounded-lg bg-emerald-300 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400/70 disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={!validateForm()}
+                  >
+                    {selectedOrder ? "Guardar" : "Crear pedido"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

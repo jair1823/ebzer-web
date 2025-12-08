@@ -6,7 +6,15 @@ import { OrdersTable } from "./OrdersTable";
 import { useOrders } from "../../hooks";
 
 export const OrdersPage: React.FC = () => {
-  const { orders, loading, createOrder, selectedOrder, setSelectedOrder, updateOrder } = useOrders();
+  const {
+    orders,
+    loading,
+    createOrder,
+    selectedOrder,
+    setSelectedOrder,
+    updateOrder,
+    finishOrder,
+  } = useOrders();
   const [isOpen, setIsOpen] = React.useState(false);
 
   const toggleModal = () => {
@@ -16,17 +24,30 @@ export const OrdersPage: React.FC = () => {
   const handleOpenCreateOrder = () => {
     setIsOpen(true);
     setSelectedOrder(null);
-  }
+  };
 
   const handleClickRow = (orderId: number) => {
-    setSelectedOrder(orders.find(order => order.id === orderId) || null);
+    setSelectedOrder(orders.find((order) => order.id === orderId) || null);
     toggleModal();
   };
 
   return (
     <DashboardLayout>
-      <OrdersHeader createOrder={createOrder} updateOrder={updateOrder} isOpen={isOpen} openCreateOrder={handleOpenCreateOrder} toggleModal={toggleModal} selectedOrder={selectedOrder} />
-      <OrdersTable orders={orders} loading={loading} onClickRow={handleClickRow} />
+      <OrdersHeader
+        createOrder={createOrder}
+        updateOrder={updateOrder}
+        isOpen={isOpen}
+        openCreateOrder={handleOpenCreateOrder}
+        toggleModal={toggleModal}
+        selectedOrder={selectedOrder}
+        finishOrder={finishOrder}
+      />
+      <OrdersTable
+        orders={orders}
+        loading={loading}
+        onClickRow={handleClickRow}
+        finishOrder={finishOrder}
+      />
     </DashboardLayout>
   );
 };

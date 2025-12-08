@@ -32,9 +32,15 @@ export const useOrders = () => {
     return response;
   };
 
+  const finishOrder = async (orderId: number) => {
+    const response = await ordersService.finishOrder(orderId.toString());
+    await getAllOrders();
+    return response;
+  };
+
   useEffect(() => {
     getAllOrders();
   }, [getAllOrders]);
 
-  return { createOrder, getAllOrders, updateOrder, orders, loading, selectedOrder, setSelectedOrder };
+  return { createOrder, getAllOrders, updateOrder, finishOrder, orders, loading, selectedOrder, setSelectedOrder };
 };

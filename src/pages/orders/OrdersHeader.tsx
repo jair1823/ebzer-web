@@ -9,7 +9,8 @@ export const OrdersHeader: React.FC<{
   updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
   toggleModal: () => void;
   openCreateOrder: () => void;
-}> = ({ createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder }) => {
+  finishOrder: (orderId: number) => void;
+}> = ({ createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder }) => {
   return (
     <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
@@ -22,6 +23,7 @@ export const OrdersHeader: React.FC<{
             toggleModal={toggleModal}
             openCreateOrder={openCreateOrder}
             updateOrder={updateOrder}
+            finishOrder={finishOrder}
           />
         </div>
       </div>
