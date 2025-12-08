@@ -1,6 +1,6 @@
 import React from "react";
 
-export const OrdersTable: React.FC<{ orders: any[]; loading: boolean }> = ({ orders, loading }) => {
+export const OrdersTable: React.FC<{ orders: any[]; loading: boolean, onClickRow: (orderId: number) => void }> = ({ orders, loading, onClickRow }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200/40">
@@ -37,7 +37,7 @@ export const OrdersTable: React.FC<{ orders: any[]; loading: boolean }> = ({ ord
           <tbody className="divide-y divide-slate-100/40 bg-white">
             {
               orders.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-100 transition-colors">
+                <tr key={order.id} className="hover:bg-slate-100 transition-colors" onClick={() => onClickRow(order.id)}>
                   <td className="px-6 py-3 text-sm text-slate-700 flex items-center gap-2">
                     <span className={`h-3 w-3 rounded-full ${order.status === 'pending' ? 'bg-gray-400' : order.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'}`}></span>{" "}
                     {/* status */}

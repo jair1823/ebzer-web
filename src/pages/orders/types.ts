@@ -3,7 +3,7 @@ export type OrderStatus = "pending" | "completed" | "paid";
 
 export interface OrderFormData {
   description: string;
-  amount_charged: string;
+  amount_charged: number;
   status: OrderStatus;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;

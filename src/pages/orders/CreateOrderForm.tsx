@@ -1,9 +1,14 @@
-import React, { useState, type ChangeEvent, type FormEvent } from "react";
-import type { OrderFormData, DeliveryType } from "./types";
+import React, {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
+import type { OrderFormData, DeliveryType, OrderStatus } from "./types";
 
 const initialFormData: OrderFormData = {
   description: "",
-  amount_charged: "",
+  amount_charged: 0,
   status: "pending", // always "pending" on creation
   estimated_delivery_date: "",
   delivery_type: "pickup",
@@ -14,21 +19,25 @@ const initialFormData: OrderFormData = {
 };
 
 export const CreateOrderForm: React.FC<{
+  isOpen: boolean;
+  selectedOrder?: any;
   createOrder: (data: OrderFormData) => Promise<void>;
-}> = ({ createOrder }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
+  toggleModal: () => void;
+  openCreateOrder: () => void;
+}> = ({
+  isOpen = false,
+  selectedOrder,
+  createOrder,
+  updateOrder,
+  toggleModal,
+  openCreateOrder,
+}) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
 
-  const toggleModal = () => {
-    setIsOpen(!isOpen);
-  };
-
   const validateForm = (): boolean => {
-    // description, amount_charged are required
-    return (
-      formData.description.trim() !== "" &&
-      formData.amount_charged.trim() !== ""
-    );
+    // description are required
+    return formData.description.trim() !== "";
   };
 
   const handleChange = (
@@ -54,6 +63,14 @@ export const CreateOrderForm: React.FC<{
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,
+      status: value as OrderStatus,
+    }));
+  };
+
+  const handleDropdownChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
       delivery_type: value as DeliveryType,
     }));
   };
@@ -70,25 +87,50 @@ export const CreateOrderForm: React.FC<{
           : null,
       };
 
-      console.log("Submitting form data:", dataToSend);
-      await createOrder(dataToSend);
+      if (selectedOrder) {
+        await updateOrder(selectedOrder.id, dataToSend);
+      } else {
+        await createOrder(dataToSend);
+      }
 
       //reset form
       setFormData(initialFormData);
 
       //close modal
-      setIsOpen(false);
+      toggleModal();
     } catch (error) {
       console.error("Error submitting form:", error);
     }
   };
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setFormData({
+        description: selectedOrder.description || "",
+        amount_charged: selectedOrder.amount_charged || 0,
+        status: selectedOrder.status || "pending",
+        estimated_delivery_date: selectedOrder.estimated_delivery_date
+          ? new Date(selectedOrder.estimated_delivery_date)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        delivery_type: selectedOrder.delivery_type || "pickup",
+        client_name: selectedOrder.client_name || "",
+        client_phone: selectedOrder.client_phone || "",
+        notes: selectedOrder.notes || "",
+        paid_50_percent: selectedOrder.paid_50_percent || false,
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [selectedOrder, isOpen]);
 
   return (
     <div className="relative">
       <button
         type="button"
         className="inline-flex items-center rounded-md bg-lime-200/80 px-3 py-2 text-sm font-semibold text-slate-500 shadow-md hover:bg-lime-300/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-500"
-        onClick={toggleModal}
+        onClick={openCreateOrder}
       >
         <svg
           width="16"
@@ -105,11 +147,11 @@ export const CreateOrderForm: React.FC<{
       </button>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
-          <div className="mx-4 w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
+          <div className="mx-4 w-full max-h-[95vh] overflow-auto max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
             {/* header */}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                Crear nuevo pedido
+                {selectedOrder ? "Editar pedido" : "Crear nuevo pedido"}
               </h2>
               <button
                 type="button"
@@ -149,7 +191,7 @@ export const CreateOrderForm: React.FC<{
                       htmlFor="amount_charged"
                       className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
                     >
-                      Monto cobrado (number)
+                      Monto cobrado
                     </label>
                     <input
                       name="amount_charged"
@@ -198,43 +240,67 @@ export const CreateOrderForm: React.FC<{
                   />
                 </div>
 
-                {/* delivery_type */}
-                <fieldset>
-                  <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-                    Tipo de entrega
-                  </legend>
+                {/* delivery_type & status(when updating) */}
+                <div className="flex items-center gap-6">
+                  <div>
+                    <label className="mb-1 block text-sm text-slate-500 dark:text-slate-400">
+                      Tipo de entrega
+                    </label>
 
-                  <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                    {[
-                      { value: "pickup", label: "Retira" },
-                      { value: "shipping", label: "Correos" },
-                      { value: "delivery", label: "Delivery" },
-                    ].map((option) => {
-                      const isActive = formData.delivery_type === option.value;
-
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() =>
-                            handleRadioChange({
-                              target: { value: option.value } as any,
-                            } as any)
-                          }
-                          className={`px-3 py-1 text-sm rounded-md transition-colors
-            ${
-              isActive
-                ? "bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white"
-                : "text-slate-600 hover:text-slate-800 dark:text-slate-300"
-            }
-          `}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
+                    <select
+                      name="delivery_type"
+                      value={formData.delivery_type}
+                      onChange={handleDropdownChange}
+                      className="block w-full rounded-md bg-slate-100/70 px-3 py-1.5 text-sm text-slate-700
+      hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-300/40 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <option value="shipping">Correos</option>
+                      <option value="pickup">Retiro en taller</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
                   </div>
-                </fieldset>
+
+                  {selectedOrder && (
+                    <fieldset>
+                      <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+                        Estado
+                      </legend>
+
+                      <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                        {[
+                          { value: "pending", label: "Pendiente" },
+                          { value: "completed", label: "Completado" },
+                          { value: "paid", label: "Pagado" },
+                        ].map((option) => {
+                          const isActive = formData.status === option.value;
+
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() =>
+                                handleRadioChange({
+                                  target: {
+                                    value: option.value,
+                                  } as any,
+                                } as any)
+                              }
+                              className={`px-3 py-1 text-sm rounded-md transition-colors
+                                ${
+                                  isActive
+                                    ? "bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white"
+                                    : "text-slate-600 hover:text-slate-800 dark:text-slate-300"
+                                }
+                              `}
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
+                  )}
+                </div>
 
                 {/* client_name & client_phone */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -307,7 +373,7 @@ export const CreateOrderForm: React.FC<{
                   className="inline-flex items-center rounded-lg bg-emerald-300 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400/70 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={!validateForm()}
                 >
-                  Crear pedido
+                  {selectedOrder ? "Editar pedido" : "Crear pedido"}
                 </button>
               </div>
             </form>

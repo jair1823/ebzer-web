@@ -4,6 +4,7 @@ import { ordersService } from "../services";
 export const useOrders = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const createOrder = async (orderData: any) => {
     const response = await ordersService.createOrder(orderData);
@@ -25,9 +26,15 @@ export const useOrders = () => {
     }
   }, []);
 
+  const updateOrder = async (orderId: number, orderData: any) => {
+    const response = await ordersService.updateOrder(orderId.toString(), orderData);
+    await getAllOrders();
+    return response;
+  };
+
   useEffect(() => {
     getAllOrders();
   }, [getAllOrders]);
 
-  return { createOrder, getAllOrders, orders, loading };
+  return { createOrder, getAllOrders, updateOrder, orders, loading, selectedOrder, setSelectedOrder };
 };
