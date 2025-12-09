@@ -5,6 +5,8 @@ import React, {
   type FormEvent,
 } from "react";
 import type { OrderFormData, DeliveryType, OrderStatus } from "./types";
+import { ConfirmModal } from "../../components";
+import { useConfirmModal } from "../../hooks";
 
 const initialFormData: OrderFormData = {
   description: "",
@@ -36,6 +38,12 @@ export const CreateOrderForm: React.FC<{
   finishOrder,
 }) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
+  const {
+    isOpen: isConfirmOpen,
+    config,
+    openConfirm,
+    closeConfirm,
+  } = useConfirmModal();
 
   const validateForm = (): boolean => {
     // description are required
@@ -75,6 +83,20 @@ export const CreateOrderForm: React.FC<{
       ...prev,
       delivery_type: value as DeliveryType,
     }));
+  };
+
+  const handleFinishClick = (orderId: number) => {
+    openConfirm({
+      title: "Finalizar pedido",
+      message:
+        "¿Estás seguro de que deseas finalizar este pedido? Esta acción no se puede deshacer.",
+      confirmText: "Finalizar",
+      cancelText: "Cancelar",
+      variant: "info",
+      onConfirm: async () => {
+        finishOrder(orderId);
+      },
+    });
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -373,8 +395,11 @@ export const CreateOrderForm: React.FC<{
                   {selectedOrder && (
                     <button
                       type="button"
-                      className="inline-flex items-center rounded-lg bg-red-300/80 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-400/80 disabled:cursor-not-allowed disabled:opacity-70"
-                      onClick={() => finishOrder(selectedOrder.id)}
+                      className="inline-flex items-center rounded-lg bg-red-400/80 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-500/80 disabled:cursor-not-allowed disabled:opacity-70"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleFinishClick(selectedOrder.id);
+                      }}
                     >
                       Finalizar
                     </button>
@@ -385,13 +410,17 @@ export const CreateOrderForm: React.FC<{
                     className="inline-flex items-center rounded-lg bg-emerald-300 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400/70 disabled:cursor-not-allowed disabled:opacity-70"
                     disabled={!validateForm()}
                   >
-                    {selectedOrder ? "Guardar" : "Crear pedido"}
+                    {selectedOrder ? "Guardar" : "Crear"}
                   </button>
                 </div>
               </div>
             </form>
           </div>
         </div>
+      )}
+      {/* Confirmation Modal */}
+      {config && (
+        <ConfirmModal isOpen={isConfirmOpen} onClose={closeConfirm} {...config} />
       )}
     </div>
   );

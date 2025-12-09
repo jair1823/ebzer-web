@@ -1,4 +1,6 @@
 import React from "react";
+import { ConfirmModal } from "../../components";
+import { useConfirmModal } from "../../hooks";
 
 export const OrdersTable: React.FC<{
   orders: any[];
@@ -6,6 +8,21 @@ export const OrdersTable: React.FC<{
   onClickRow: (orderId: number) => void;
   finishOrder: (orderId: number) => void;
 }> = ({ orders, loading, onClickRow, finishOrder }) => {
+  const { isOpen, config, openConfirm, closeConfirm } = useConfirmModal();
+
+  const handleFinishClick = (orderId: number) => {
+    openConfirm({
+      title: "Finalizar pedido",
+      message:
+        "¿Estás seguro de que deseas finalizar este pedido? Esta acción no se puede deshacer.",
+      confirmText: "Finalizar",
+      cancelText: "Cancelar",
+      variant: "info",
+      onConfirm: async () => {
+        finishOrder(orderId);
+      },
+    });
+  };
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200/40">
@@ -52,10 +69,10 @@ export const OrdersTable: React.FC<{
                     <span
                       className={`h-3 w-3 rounded-full ${
                         order.status === "pending"
-                          ? "bg-gray-400"
+                          ? "bg-red-400/80"
                           : order.status === "completed"
-                          ? "bg-green-500"
-                          : "bg-blue-500"
+                          ? "bg-cyan-300/80"
+                          : "bg-lime-300/80"
                       }`}
                     ></span>{" "}
                     {/* status */}
@@ -74,10 +91,10 @@ export const OrdersTable: React.FC<{
                   </td>
                   <td className="text-sm text-slate-700">
                     <button
-                      className="px-3 py-1 bg-red-300/80 text-white rounded-md hover:bg-red-400/80 transition-colors"
+                      className="px-3 py-1 bg-red-400/80 text-white rounded-md hover:bg-red-500/80 transition-colors"
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.stopPropagation();
-                        finishOrder(order.id);
+                        handleFinishClick(order.id);
                       }}
                     >
                       Finalizar
@@ -89,6 +106,11 @@ export const OrdersTable: React.FC<{
           )}
         </table>
       </div>
+
+      {/* Confirmation Modal */}
+      {config && (
+        <ConfirmModal isOpen={isOpen} onClose={closeConfirm} {...config} />
+      )}
     </div>
   );
 };
