@@ -30,6 +30,7 @@ export const useOrders = () => {
   const updateOrder = async (orderId: number, orderData: any) => {
     const response = await ordersService.updateOrder(orderId.toString(), orderData);
     await getAllOrders();
+    setSelectedOrder(orders.find((order) => order.id === orderId) || null);
     return response;
   };
 

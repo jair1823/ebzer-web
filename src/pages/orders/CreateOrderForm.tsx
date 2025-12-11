@@ -115,19 +115,14 @@ export const CreateOrderForm: React.FC<{
           ? new Date(formData.estimated_delivery_date).toISOString()
           : null,
       };
-      // console.log("Submitting form data:", dataToSend);
-      // return
       if (selectedOrder) {
         await updateOrder(selectedOrder.id, dataToSend);
       } else {
         await createOrder(dataToSend);
+        // reset form & close modal
+        setFormData(initialFormData);
+        toggleModal();
       }
-
-      //reset form
-      setFormData(initialFormData);
-
-      //close modal
-      toggleModal();
     } catch (error) {
       console.error("Error submitting form:", error);
     }
