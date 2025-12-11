@@ -51,14 +51,14 @@ export const OrdersTable: React.FC<{
             </tr>
           </thead>
 
-          {loading ? (
+          {loading || !orders.length ? (
             <tbody>
               <tr>
                 <td
                   colSpan={4}
                   className="px-6 py-4 text-center text-sm text-slate-500"
                 >
-                  Cargando pedidos...
+                  {loading ? "Cargando pedidos..." : "No hay pedidos disponibles."}
                 </td>
               </tr>
             </tbody>
