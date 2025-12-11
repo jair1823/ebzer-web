@@ -1,9 +1,11 @@
 import React from "react";
 import { ConfirmModal } from "../../components";
 import { useConfirmModal } from "../../hooks";
+import type { Order } from "./types";
+import { formatOrderId } from "../../utils";
 
 export const OrdersTable: React.FC<{
-  orders: any[];
+  orders: Order[];
   loading: boolean;
   onClickRow: (orderId: number) => void;
   finishOrder: (orderId: number) => void;
@@ -33,7 +35,10 @@ export const OrdersTable: React.FC<{
                 # Pedido
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Descripción
+                Cliente
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Fecha de ingreso
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Entrega Estimada
@@ -69,36 +74,47 @@ export const OrdersTable: React.FC<{
                     <span
                       className={`h-3 w-3 rounded-full ${
                         order.status === "pending"
-                          ? "bg-red-400/80"
+                          ? "bg-red-900/80"
                           : order.status === "completed"
-                          ? "bg-cyan-300/80"
-                          : "bg-lime-300/80"
+                          ? "bg-lime-200/80"
+                          : "bg-cyan-300/80" /* default case */
                       }`}
                     ></span>{" "}
                     {/* status */}
-                    {order.id}
+                    {formatOrderId(order.id)}
                   </td>
                   <td className="px-6 py-3 text-sm text-slate-700">
-                    {order.description}
+                    {order.client_name
+                      ? order.client_name
+                      : order.client_phone
+                      ? order.client_phone
+                      : "-"}
                   </td>
                   <td className="px-6 py-3 text-sm text-slate-700">
                     {new Date(
-                      order.estimated_delivery_date
+                      order.entry_date || ""
+                    ).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-3 text-sm text-slate-700">
+                    {new Date(
+                      order.estimated_delivery_date || ""
                     ).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-3 text-sm text-slate-700">
                     ₡{order.amount_charged.toFixed(2)}
                   </td>
                   <td className="text-sm text-slate-700">
-                    <button
-                      className="px-3 py-1 bg-red-400/80 text-white rounded-md hover:bg-red-500/80 transition-colors"
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.stopPropagation();
-                        handleFinishClick(order.id);
-                      }}
-                    >
-                      Finalizar
-                    </button>
+                    {!order.is_paid && (
+                      <button
+                        className="px-3 py-1 bg-red-400/80 text-white rounded-md hover:bg-red-500/80 transition-colors"
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation();
+                          handleFinishClick(order.id);
+                        }}
+                      >
+                        Finalizar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

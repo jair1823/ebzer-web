@@ -1,9 +1,37 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
-  body {
+  /* body {
     @apply bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50;
+  } */
+}
+
+@layer components {
+  /* Input base styles with disabled state */
+  .input-base {
+    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm;
+    @apply focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500;
+    @apply dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
+    @apply disabled:cursor-not-allowed disabled:bg-slate-200/50 disabled:text-slate-500;
   }
-} */
+
+  /* Button base styles with disabled state */
+  .btn-base {
+    @apply inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold shadow transition-colors;
+    @apply disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .btn-ternary {
+    @apply bg-emerald-300 text-white hover:bg-emerald-400/70;
+  }
+
+  .btn-danger {
+    @apply bg-red-400/80 text-white hover:bg-red-500/80;
+  }
+
+  /* Generic disabled state utility */
+  .disabled-state {
+    @apply disabled:cursor-not-allowed disabled:bg-slate-200/50 disabled:text-slate-500 disabled:opacity-70;
+  }
+}
+

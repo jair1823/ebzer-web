@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { ordersService } from "../services";
+import type { Order, OrderFormData } from "../pages/orders/types";
 
 export const useOrders = () => {
   const [loading, setLoading] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const createOrder = async (orderData: any) => {
+  const createOrder = async (orderData: OrderFormData) => {
     const response = await ordersService.createOrder(orderData);
     await getAllOrders();
     return response;

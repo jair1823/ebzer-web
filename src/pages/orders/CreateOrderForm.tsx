@@ -4,25 +4,33 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import type { OrderFormData, DeliveryType, OrderStatus } from "./types";
+import type {
+  OrderFormData,
+  DeliveryType,
+  OrderStatus,
+  PaymentStatus,
+  Order,
+} from "./types";
 import { ConfirmModal } from "../../components";
 import { useConfirmModal } from "../../hooks";
+import { formatOrderId } from "../../utils";
 
 const initialFormData: OrderFormData = {
   description: "",
   amount_charged: 0,
   status: "pending", // always "pending" on creation
-  estimated_delivery_date: "",
-  delivery_type: "pickup",
+  estimated_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // default 4 days from now - yyyy-MM-dd
+  delivery_type: "shipping",
   client_name: "",
   client_phone: "",
   notes: "",
-  paid_50_percent: false,
+  payment_status: "unpaid",
+  is_paid: false,
 };
 
 export const CreateOrderForm: React.FC<{
   isOpen: boolean;
-  selectedOrder?: any;
+  selectedOrder?: Order;
   createOrder: (data: OrderFormData) => Promise<void>;
   updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
   toggleModal: () => void;
@@ -38,6 +46,7 @@ export const CreateOrderForm: React.FC<{
   finishOrder,
 }) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
+  const [disabled, setDisabled] = useState(false);
   const {
     isOpen: isConfirmOpen,
     config,
@@ -61,14 +70,6 @@ export const CreateOrderForm: React.FC<{
     }));
   };
 
-  const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
-  };
-
   const handleRadioChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData((prev) => ({
@@ -78,10 +79,14 @@ export const CreateOrderForm: React.FC<{
   };
 
   const handleDropdownChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
+    const { value, name } = e.target;
+    const typedValue =
+      name === "delivery_type"
+        ? (value as DeliveryType)
+        : (value as PaymentStatus);
     setFormData((prev) => ({
       ...prev,
-      delivery_type: value as DeliveryType,
+      [name]: typedValue,
     }));
   };
 
@@ -110,7 +115,8 @@ export const CreateOrderForm: React.FC<{
           ? new Date(formData.estimated_delivery_date).toISOString()
           : null,
       };
-
+      // console.log("Submitting form data:", dataToSend);
+      // return
       if (selectedOrder) {
         await updateOrder(selectedOrder.id, dataToSend);
       } else {
@@ -138,14 +144,17 @@ export const CreateOrderForm: React.FC<{
               .toISOString()
               .split("T")[0]
           : "",
-        delivery_type: selectedOrder.delivery_type || "pickup",
+        delivery_type: selectedOrder.delivery_type || "shipping",
         client_name: selectedOrder.client_name || "",
         client_phone: selectedOrder.client_phone || "",
         notes: selectedOrder.notes || "",
-        paid_50_percent: selectedOrder.paid_50_percent || false,
+        payment_status: selectedOrder.payment_status || "unpaid",
+        is_paid: selectedOrder.is_paid || false,
       });
+      setDisabled(selectedOrder.is_paid || false);
     } else {
       setFormData(initialFormData);
+      setDisabled(false);
     }
   }, [selectedOrder, isOpen]);
 
@@ -157,17 +166,18 @@ export const CreateOrderForm: React.FC<{
         onClick={openCreateOrder}
       >
         <svg
-          width="16"
-          height="16"
+          width="12"
+          height="12"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
+          className="mr-1"
         >
-          <g className="stroke-slate-500" strokeLinecap="round" strokeWidth="2">
+          <g className="stroke-slate-500" strokeLinecap="round" strokeWidth="3">
             <path d="M12 19V5" />
             <path d="M19 12H5" />
           </g>
         </svg>
-        Nuevo Pedido
+        Nuevo pedido
       </button>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
@@ -175,7 +185,7 @@ export const CreateOrderForm: React.FC<{
             {/* header */}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {selectedOrder ? "Editar pedido" : "Crear nuevo pedido"}
+                {selectedOrder ? `Pedido #${formatOrderId(selectedOrder.id)}` : "Crear nuevo pedido"}
               </h2>
               <button
                 type="button"
@@ -189,142 +199,6 @@ export const CreateOrderForm: React.FC<{
             {/* form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <>
-                {/* description */}
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                  >
-                    Descripción
-                  </label>
-                  <input
-                    name="description"
-                    type="text"
-                    value={formData.description}
-                    onChange={handleChange}
-                    className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Ej. Camisetas personalizadas para evento"
-                    required
-                  />
-                </div>
-
-                {/* amount_charged & paid_50_percent */}
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                  <div>
-                    <label
-                      htmlFor="amount_charged"
-                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                    >
-                      Monto cobrado
-                    </label>
-                    <input
-                      name="amount_charged"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={formData.amount_charged}
-                      onChange={handleChange}
-                      className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <input
-                      name="paid_50_percent"
-                      type="checkbox"
-                      checked={formData.paid_50_percent}
-                      onChange={handleCheckboxChange}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label
-                      htmlFor="isUrgent"
-                      className="text-sm text-slate-700 dark:text-slate-200 whitespace-nowrap"
-                    >
-                      50% pagado
-                    </label>
-                  </div>
-                </div>
-
-                {/* estimated_delivery_date */}
-                <div>
-                  <label
-                    htmlFor="estimated_delivery_date"
-                    className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                  >
-                    Fecha estimada de entrega
-                  </label>
-                  <input
-                    id="estimated_delivery_date"
-                    name="estimated_delivery_date"
-                    type="date"
-                    value={formData.estimated_delivery_date || ""}
-                    onChange={handleChange}
-                    className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                  />
-                </div>
-
-                {/* delivery_type & status(when updating) */}
-                <div className="flex items-center gap-6">
-                  <div>
-                    <label className="mb-1 block text-sm text-slate-500 dark:text-slate-400">
-                      Tipo de entrega
-                    </label>
-
-                    <select
-                      name="delivery_type"
-                      value={formData.delivery_type}
-                      onChange={handleDropdownChange}
-                      className="block w-full rounded-md bg-slate-100/70 px-3 py-1.5 text-sm text-slate-700
-      hover:bg-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-300/40 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-slate-800"
-                    >
-                      <option value="shipping">Correos</option>
-                      <option value="pickup">Retiro en taller</option>
-                      <option value="delivery">Delivery</option>
-                    </select>
-                  </div>
-
-                  {selectedOrder && (
-                    <fieldset>
-                      <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-                        Estado
-                      </legend>
-
-                      <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                        {[
-                          { value: "pending", label: "Pendiente" },
-                          { value: "completed", label: "Completado" },
-                        ].map((option) => {
-                          const isActive = formData.status === option.value;
-
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() =>
-                                handleRadioChange({
-                                  target: {
-                                    value: option.value,
-                                  } as any,
-                                } as any)
-                              }
-                              className={`px-3 py-1 text-sm rounded-md transition-colors
-                                ${
-                                  isActive
-                                    ? "bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white"
-                                    : "text-slate-600 hover:text-slate-800 dark:text-slate-300"
-                                }
-                              `}
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                  )}
-                </div>
-
                 {/* client_name & client_phone */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
@@ -340,8 +214,9 @@ export const CreateOrderForm: React.FC<{
                       type="text"
                       value={formData.client_name}
                       onChange={handleChange}
-                      className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      className="input-base"
                       placeholder="Ej. Juan Pérez"
+                      disabled={disabled}
                     />
                   </div>
                   <div>
@@ -357,9 +232,151 @@ export const CreateOrderForm: React.FC<{
                       type="tel"
                       value={formData.client_phone}
                       onChange={handleChange}
-                      className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      className="input-base"
                       placeholder="Ej. +1234567890"
+                      disabled={disabled}
                     />
+                  </div>
+                </div>
+
+                {/* description */}
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
+                  >
+                    Pedido
+                  </label>
+                  <input
+                    name="description"
+                    type="text"
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="input-base"
+                    placeholder="Ej. Camisetas personalizadas para evento"
+                    disabled={disabled}
+                    required
+                  />
+                </div>
+
+                {/* amount_charged & payment_status & status */}
+                <div className="grid grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label
+                      htmlFor="amount_charged"
+                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
+                    >
+                      Total
+                    </label>
+                    <input
+                      name="amount_charged"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={formData.amount_charged}
+                      onChange={handleChange}
+                      className="input-base"
+                      placeholder="0.00"
+                      disabled={disabled}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Estado de pago
+                    </label>
+                    <select
+                      name="payment_status"
+                      value={formData.payment_status}
+                      onChange={handleDropdownChange}
+                      className="input-base"
+                      disabled={disabled}
+                    >
+                      <option value="unpaid">Pendiente</option>
+                      <option value="partial">Parcial</option>
+                      <option value="paid">Cancelado</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    {selectedOrder && (
+                      <fieldset>
+                        <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+                          Estado
+                        </legend>
+
+                        <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                          {[
+                            { value: "pending", label: "Pendiente" },
+                            { value: "completed", label: "Completado" },
+                          ].map((option) => {
+                            const isActive = formData.status === option.value;
+
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() =>
+                                  handleRadioChange({
+                                    target: {
+                                      value: option.value,
+                                    } as any,
+                                  } as any)
+                                }
+                                className={`disabled-state px-3 py-1 text-sm rounded-md transition-colors
+                                ${
+                                  isActive
+                                    ? "bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white"
+                                    : "text-slate-600 hover:text-slate-800 dark:text-slate-300"
+                                }
+                              `}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    )}
+                  </div>
+                </div>
+
+                {/* estimated_delivery_date & delivery_type  */}
+                <div className="grid grid-cols-2 gap-4 items-end">
+                  <div>
+                    <label
+                      htmlFor="estimated_delivery_date"
+                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
+                    >
+                      Fecha estimada de entrega
+                    </label>
+                    <input
+                      id="estimated_delivery_date"
+                      name="estimated_delivery_date"
+                      type="date"
+                      value={formData.estimated_delivery_date || ""}
+                      onChange={handleChange}
+                      className="input-base"
+                      disabled={disabled}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+                      Tipo de entrega
+                    </label>
+
+                    <select
+                      name="delivery_type"
+                      value={formData.delivery_type}
+                      onChange={handleDropdownChange}
+                      className="input-base"
+                      disabled={disabled}
+                    >
+                      <option value="shipping">Correos</option>
+                      <option value="pickup">Retiro en taller</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
                   </div>
                 </div>
 
@@ -369,15 +386,16 @@ export const CreateOrderForm: React.FC<{
                     htmlFor="notes"
                     className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
                   >
-                    Notas
+                    Descripción
                   </label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={formData.notes}
                     onChange={handleChange}
-                    className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    className="input-base"
                     placeholder="Notas adicionales"
+                    disabled={disabled}
                   />
                 </div>
               </>
@@ -392,22 +410,22 @@ export const CreateOrderForm: React.FC<{
                 </button>
 
                 <div className="flex items-center gap-4">
-                  {selectedOrder && (
+                  {selectedOrder && !disabled && (
                     <button
                       type="button"
-                      className="inline-flex items-center rounded-lg bg-red-400/80 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-red-500/80 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="btn-base btn-danger"
                       onClick={(e) => {
                         e.preventDefault();
                         handleFinishClick(selectedOrder.id);
                       }}
                     >
-                      Finalizar
+                      Finalizar Pedido
                     </button>
                   )}
 
                   <button
                     type="submit"
-                    className="inline-flex items-center rounded-lg bg-emerald-300 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-400/70 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="btn-base btn-ternary"
                     disabled={!validateForm()}
                   >
                     {selectedOrder ? "Guardar" : "Crear"}
@@ -420,7 +438,11 @@ export const CreateOrderForm: React.FC<{
       )}
       {/* Confirmation Modal */}
       {config && (
-        <ConfirmModal isOpen={isConfirmOpen} onClose={closeConfirm} {...config} />
+        <ConfirmModal
+          isOpen={isConfirmOpen}
+          onClose={closeConfirm}
+          {...config}
+        />
       )}
     </div>
   );

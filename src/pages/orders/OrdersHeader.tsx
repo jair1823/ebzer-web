@@ -1,10 +1,10 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
-import type { OrderFormData } from "./types";
+import type { Order, OrderFormData } from "./types";
 
 export const OrdersHeader: React.FC<{
   isOpen: boolean;
-  selectedOrder?: any;
+  selectedOrder?: Order | null;
   createOrder: (data: OrderFormData) => Promise<void>;
   updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
   toggleModal: () => void;
@@ -18,7 +18,7 @@ export const OrdersHeader: React.FC<{
         <div className="mt-8 lg:mt-4 lg:ml-4">
           <CreateOrderForm
             isOpen={isOpen}
-            selectedOrder={selectedOrder}
+            selectedOrder={selectedOrder || undefined}
             createOrder={createOrder}
             toggleModal={toggleModal}
             openCreateOrder={openCreateOrder}
