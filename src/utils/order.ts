@@ -11,3 +11,21 @@
 export const formatOrderId = (id: number | string): string => {
   return String(id).padStart(5, "0");
 };
+
+/**
+ * Format a number to Costa Rican currency format (Colón)
+ * @param amount - The numeric amount to format
+ * @returns String with currency format ₡1 000 000,00
+ * @example
+ * formatCurrency(1000000) // "₡1 000 000,00"
+ * formatCurrency(1500.5) // "₡1 500,50"
+ * formatCurrency(0) // "₡0,00"
+ */
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("es-CR", {
+    style: "currency",
+    currency: "CRC",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
