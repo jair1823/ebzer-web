@@ -1,5 +1,5 @@
 /**
- * Fomat a number ID to a 5-digit format with leading zeros
+ * Format a number ID to a 5-digit format with leading zeros
  * @param id - The numeric ID to format
  * @returns String with 5 digits, padded with leading zeros
  * @example
@@ -28,4 +28,19 @@ export const formatCurrency = (amount: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+};
+
+/**
+ * Format a date string to DD/MM/YYYY format
+ * @param dateString - The date string to format
+ * @returns String with DD/MM/YYYY format
+ * @example
+ * formatDate("2023-12-13") // "13/12/2023"
+ */
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 };
