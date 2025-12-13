@@ -1,5 +1,5 @@
 /**
- * Fomat a number ID to a 5-digit format with leading zeros
+ * Format a number ID to a 5-digit format with leading zeros
  * @param id - The numeric ID to format
  * @returns String with 5 digits, padded with leading zeros
  * @example
