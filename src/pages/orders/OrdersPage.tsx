@@ -1,5 +1,4 @@
 import React from "react";
-import { DashboardLayout } from "../../layouts";
 import { OrdersHeader } from "./OrdersHeader";
 import { OrdersTable } from "./OrdersTable";
 
@@ -32,7 +31,7 @@ export const OrdersPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <div className="py-8">
       <OrdersHeader
         createOrder={createOrder}
         updateOrder={updateOrder}
@@ -48,6 +47,6 @@ export const OrdersPage: React.FC = () => {
         onClickRow={handleClickRow}
         finishOrder={finishOrder}
       />
-    </DashboardLayout>
+    </div>
   );
 };
