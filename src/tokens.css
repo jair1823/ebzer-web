@@ -1,0 +1,168 @@
+/**
+ * Design Tokens - Ebzer Web
+ * Sistema de color basado en Carbon Design System y Material Design
+ * Opción C: Rosado Modernizado con Dark Mode
+ */
+
+@layer theme {
+  :root {
+    /* ========================================
+       LIGHT THEME (Default)
+       ======================================== */
+
+    /* === Backgrounds === */
+    --background: 248 250 252; /* slate-50 - fondo global */
+    --surface: 255 255 255; /* white - cards, modales */
+    --surface-elevated: 241 245 249; /* slate-100 - elementos elevados */
+    --surface-hover: 226 232 240; /* slate-200 - hover en superficies */
+
+    /* === Text === */
+    --text-primary: 15 23 42; /* slate-900 - texto principal */
+    --text-secondary: 100 116 139; /* slate-500 - texto secundario */
+    --text-tertiary: 148 163 184; /* slate-400 - texto terciario */
+    --text-disabled: 203 213 225; /* slate-300 - texto deshabilitado */
+    --text-on-primary: 255 255 255; /* white - texto sobre primario */
+    --text-on-accent: 255 255 255; /* white - texto sobre acento */
+
+    /* === Borders === */
+    --border: 226 232 240; /* slate-200 - bordes estándar */
+    --border-subtle: 241 245 249; /* slate-100 - bordes sutiles */
+    --border-strong: 203 213 225; /* slate-300 - bordes fuertes */
+
+    /* === Brand Colors - Primary (Rose/Rosado) === */
+    --primary: 244 63 94; /* rose-500 - acción principal */
+    --primary-hover: 225 29 72; /* rose-600 - hover */
+    --primary-active: 190 18 60; /* rose-700 - active (2 pasos) */
+    --primary-soft: 254 205 211; /* rose-200 - backgrounds suaves */
+    --primary-strong: 248 113 113; /* rose-400 - énfasis medio */
+    --primary-foreground: 127 29 29; /* rose-900 - texto sobre rosado claro */
+
+    /* === Brand Colors - Secondary (Lime/Verde Lima) === */
+    --secondary: 132 204 22; /* lime-500 - success */
+    --secondary-hover: 101 163 13; /* lime-600 */
+    --secondary-active: 77 124 15; /* lime-700 */
+    --secondary-soft: 217 249 157; /* lime-200 */
+    --secondary-strong: 163 230 53; /* lime-400 */
+    --secondary-foreground: 54 83 20; /* lime-900 */
+
+    /* === Brand Colors - Accent (Cyan) === */
+    --accent: 6 182 212; /* cyan-500 - CTA importante */
+    --accent-hover: 8 145 178; /* cyan-600 */
+    --accent-active: 14 116 144; /* cyan-700 */
+    --accent-soft: 165 243 252; /* cyan-200 */
+    --accent-strong: 34 211 238; /* cyan-400 */
+
+    /* === Functional Colors === */
+    --info: 14 165 233; /* sky-500 - información */
+    --info-soft: 186 230 253; /* sky-200 */
+    --info-strong: 56 189 248; /* sky-400 */
+    --info-foreground: 12 74 110; /* sky-900 */
+
+    --warning: 245 158 11; /* amber-500 */
+    --warning-soft: 254 215 170; /* amber-200 */
+    --warning-foreground: 120 53 15; /* amber-900 */
+
+    --danger: 239 68 68; /* red-500 - errores/destructivas */
+    --danger-hover: 220 38 38; /* red-600 */
+    --danger-active: 185 28 28; /* red-700 */
+    --danger-soft: 254 202 202; /* red-200 */
+    --danger-strong: 248 113 113; /* red-400 */
+
+    --success: 132 204 22; /* lime-500 - mismo que secondary */
+    --success-soft: 217 249 157; /* lime-200 */
+
+    --muted: 79 70 229; /* indigo-600 - estados completados/archivados */
+    --muted-soft: 199 210 254; /* indigo-200 */
+
+    /* === Focus & Interaction === */
+    --focus: 6 182 212; /* cyan-500 - ring de foco */
+    --focus-ring: 6 182 212; /* cyan-500 alpha se aplica en uso */
+
+    /* === Shadows === */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* ========================================
+     DARK THEME
+     ======================================== */
+
+  [data-theme="dark"] {
+    /* === Backgrounds - Invertidos === */
+    --background: 2 6 23; /* slate-950 - fondo global oscuro */
+    --surface: 15 23 42; /* slate-900 - cards oscuras */
+    --surface-elevated: 30 41 59; /* slate-800 - elevados */
+    --surface-hover: 51 65 85; /* slate-700 - hover */
+
+    /* === Text - Invertidos === */
+    --text-primary: 248 250 252; /* slate-50 - texto claro */
+    --text-secondary: 148 163 184; /* slate-400 */
+    --text-tertiary: 100 116 139; /* slate-500 */
+    --text-disabled: 71 85 105; /* slate-600 */
+    --text-on-primary: 255 255 255; /* white */
+    --text-on-accent: 255 255 255; /* white */
+
+    /* === Borders === */
+    --border: 51 65 85; /* slate-700 */
+    --border-subtle: 30 41 59; /* slate-800 */
+    --border-strong: 71 85 105; /* slate-600 */
+
+    /* === Brand Colors - Primary (Rose más claro para dark) === */
+    --primary: 251 113 133; /* rose-400 - más visible en dark */
+    --primary-hover: 244 63 94; /* rose-500 */
+    --primary-active: 225 29 72; /* rose-600 */
+    --primary-soft: 159 18 57; /* rose-800 - background oscuro */
+    --primary-strong: 244 63 94; /* rose-500 */
+    --primary-foreground: 255 241 242; /* rose-50 */
+
+    /* === Brand Colors - Secondary (Lime más claro) === */
+    --secondary: 163 230 53; /* lime-400 */
+    --secondary-hover: 132 204 22; /* lime-500 */
+    --secondary-active: 101 163 13; /* lime-600 */
+    --secondary-soft: 77 124 15; /* lime-700 - background oscuro */
+    --secondary-strong: 132 204 22; /* lime-500 */
+    --secondary-foreground: 247 254 231; /* lime-50 */
+
+    /* === Brand Colors - Accent (Cyan más claro) === */
+    --accent: 34 211 238; /* cyan-400 */
+    --accent-hover: 6 182 212; /* cyan-500 */
+    --accent-active: 8 145 178; /* cyan-600 */
+    --accent-soft: 14 116 144; /* cyan-700 - background oscuro */
+    --accent-strong: 6 182 212; /* cyan-500 */
+
+    /* === Functional Colors (dark) === */
+    --muted: 129 140 248; /* indigo-400 - más claro para dark mode */
+    --muted-soft: 55 48 163; /* indigo-800 */
+
+    /* === Functional Colors === */
+    --info: 56 189 248; /* sky-400 */
+    --info-soft: 12 74 110; /* sky-900 dark */
+    --info-strong: 14 165 233; /* sky-500 */
+    --info-foreground: 224 242 254; /* sky-50 */
+
+    --warning: 251 191 36; /* amber-400 */
+    --warning-soft: 120 53 15; /* amber-900 dark */
+    --warning-foreground: 254 252 232; /* amber-50 */
+
+    --danger: 248 113 113; /* red-400 */
+    --danger-hover: 239 68 68; /* red-500 */
+    --danger-active: 220 38 38; /* red-600 */
+    --danger-soft: 127 29 29; /* red-900 dark */
+    --danger-strong: 239 68 68; /* red-500 */
+
+    --success: 163 230 53; /* lime-400 */
+    --success-soft: 77 124 15; /* lime-700 dark */
+
+    /* === Focus === */
+    --focus: 34 211 238; /* cyan-400 - más visible en dark */
+    --focus-ring: 34 211 238;
+
+    /* === Shadows - Más intensas en dark === */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  }
+}

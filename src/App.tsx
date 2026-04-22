@@ -2,6 +2,7 @@ import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { OrdersPage, IncomesPage, ExpensesPage } from "./pages";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { ThemeToggle } from "./components";
 
 const router = createBrowserRouter([
   {
@@ -25,7 +26,12 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ThemeToggle />
+    </>
+  );
 }
 
 export default App;

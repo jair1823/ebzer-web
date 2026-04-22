@@ -1,78 +1,148 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 export const Navbar: React.FC = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const navItems = [
-    { path: "/", label: "Pedidos" },
-    { path: "/incomes", label: "Ingresos" },
-    { path: "/expenses", label: "Gastos" },
+    { path: "/", label: "Pedidos", icon: "📦" },
+    { path: "/incomes", label: "Ingresos", icon: "💰" },
+    { path: "/expenses", label: "Gastos", icon: "📊" },
   ];
 
   return (
     <>
-      <nav className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-8">
-              <div className="shrink-0">
-                <h1 className="font-mono font-bold text-red-900 text-2xl">
-                  Creaciones Eben-Ezer
-                </h1>
-              </div>
-              <div className="hidden md:flex gap-1">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    end={item.path === "/"}
-                    className={({ isActive }) =>
-                      `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-red-400/80 text-white"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
+      {/* Skip to main content link - Accessibility best practice from Carbon */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-4 focus:rounded-md focus:px-4 focus:py-2 focus:outline-none focus:ring-2 bg-surface text-primary focus-ring"
+      >
+        Ir al contenido principal
+      </a>
+
+      {/* Header - Carbon UI Shell inspired */}
+      <header
+        className="sticky top-0 z-40 w-full border-b bg-surface shadow-sm border-default"
+        role="banner"
+      >
+        <nav
+          className="mx-auto flex h-12 max-w-screen-2xl items-center justify-between px-4 lg:px-6"
+          aria-label="Navegación principal"
+        >
+          {/* Left section: Product branding (Carbon: product-level) */}
+          <div className="flex items-center gap-6 lg:gap-8">
+            {/* Brand/Logo */}
+            <div className="flex shrink-0 items-center">
+              <h1 className="text-brand-primary font-mono text-base font-bold tracking-tight lg:text-lg">
+                <span className="hidden sm:inline">Creaciones </span>Eben-Ezer
+              </h1>
             </div>
-            <div className="-mr-2 flex md:hidden">
-              {/* todo: make this button functional */}
-              <button
-                type="button"
-                command="--toggle"
-                commandfor="mobile-menu"
-                className="bg-red-500 relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500"
-              >
-                <span className="absolute -inset-0.5"></span>
-                <span className="sr-only">Open main menu</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  data-slot="icon"
-                  aria-hidden="true"
-                  className="size-6 in-aria-expanded:hidden"
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden items-center gap-1 md:flex" role="navigation">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  className={({ isActive }) =>
+                    `group relative flex h-12 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-all duration-150 ${
+                      isActive
+                        ? "border-primary text-brand-primary"
+                        : "border-transparent text-secondary hover:border-border hover:text-primary"
+                    }`
+                  }
                 >
-                  <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  data-slot="icon"
-                  aria-hidden="true"
-                  className="size-6 not-in-aria-expanded:hidden"
-                >
-                  <path d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+                  {({ isActive }) => (
+                    <>
+                      <span className="text-base" aria-hidden="true">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                      {/* Active indicator */}
+                      {isActive && (
+                        <span
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
             </div>
           </div>
-        </div>
-      </nav>
+
+          {/* Right section: Mobile menu button (Carbon: system-level controls) */}
+          <div className="flex items-center md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-controls="mobile-menu"
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md text-secondary transition-colors hover:bg-surface-elevated hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus-ring"
+            >
+              {mobileMenuOpen ? (
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </nav>
+
+        {/* Mobile menu panel - Follows Carbon responsive pattern */}
+        {mobileMenuOpen && (
+          <div
+            id="mobile-menu"
+            className="border-t bg-surface md:hidden border-default"
+            role="navigation"
+            aria-label="Navegación móvil"
+          >
+            <div className="space-y-1 px-3 pb-3 pt-2">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-base font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary-soft text-brand-primary"
+                        : "text-primary hover:bg-surface-elevated hover:text-primary"
+                    }`
+                  }
+                >
+                  <span className="text-lg" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
     </>
   );
 };

@@ -8,24 +8,36 @@ import type {
   OrderFormData,
   DeliveryType,
   OrderStatus,
-  PaymentStatus,
   Order,
+  TemporaryIncome,
 } from "./types";
-import { ConfirmModal } from "../../components";
-import { useConfirmModal } from "../../hooks";
-import { formatOrderId } from "../../utils";
+import type { Income } from "../incomes/types";
+import { ConfirmModal, Toast } from "../../components";
+import { useConfirmModal, useToast } from "../../hooks";
+import { incomesService } from "../../services";
+import { formatOrderId, getStatusLabel, formatCurrency, getStatusColor, calculatePaymentStatus, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
+import { OrderPaymentsSection } from "./OrderPaymentsSection";
+
+// Helper to get today's date in YYYY-MM-DD format (local timezone)
+const getTodayLocalDate = (): string => {
+  return new Date().toLocaleDateString('en-CA'); // en-CA produces YYYY-MM-DD format
+};
 
 const initialFormData: OrderFormData = {
   description: "",
   amount_charged: 0,
-  status: "pending", // always "pending" on creation
+  status: "confirmed", // default status per backend
   estimated_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // default 4 days from now - yyyy-MM-dd
   delivery_type: "shipping",
   client_name: "",
   client_phone: "",
   notes: "",
-  payment_status: "unpaid",
-  is_paid: false,
+};
+
+const deliveryTypeLabels: Record<DeliveryType, string> = {
+  shipping: "Correos",
+  pickup: "Retiro en taller",
+  delivery: "Delivery",
 };
 
 export const CreateOrderForm: React.FC<{
@@ -36,6 +48,7 @@ export const CreateOrderForm: React.FC<{
   toggleModal: () => void;
   openCreateOrder: () => void;
   finishOrder: (orderId: number) => void;
+  showTrigger?: boolean;
 }> = ({
   isOpen = false,
   selectedOrder,
@@ -44,19 +57,107 @@ export const CreateOrderForm: React.FC<{
   toggleModal,
   openCreateOrder,
   finishOrder,
+  showTrigger = true,
 }) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
-  const [disabled, setDisabled] = useState(false);
+  const [incomes, setIncomes] = useState<TemporaryIncome[]>([]);
+  const [newIncomeAmount, setNewIncomeAmount] = useState<number>(0);
+  const [newIncomeDate, setNewIncomeDate] = useState<string>(
+    getTodayLocalDate()
+  );
+  
+  // Track original state for change detection
+  const [originalFormData, setOriginalFormData] = useState<OrderFormData>(initialFormData);
+  const [originalIncomes, setOriginalIncomes] = useState<TemporaryIncome[]>([]);
+  
   const {
     isOpen: isConfirmOpen,
     config,
     openConfirm,
     closeConfirm,
   } = useConfirmModal();
+  const {
+    isVisible: isToastVisible,
+    config: toastConfig,
+    hideToast,
+    showSuccess,
+    showError,
+  } = useToast();
 
   const validateForm = (): boolean => {
-    // description are required
-    return formData.description.trim() !== "";
+    // description and client_name are required
+    return formData.description.trim() !== "" && formData.client_name.trim() !== "";
+  };
+
+  // Check if form has unsaved changes
+  const hasUnsavedChanges = (): boolean => {
+    // Compare formData
+    const formChanged = JSON.stringify(formData) !== JSON.stringify(originalFormData);
+    
+    // Compare incomes (only new ones matter for change detection)
+    const newIncomes = incomes.filter(inc => !inc.isExisting);
+    const originalNewIncomes = originalIncomes.filter(inc => !inc.isExisting);
+    const incomesChanged = JSON.stringify(newIncomes) !== JSON.stringify(originalNewIncomes);
+    
+    return formChanged || incomesChanged;
+  };
+
+  // Load existing incomes when editing an order
+  const loadIncomes = async (orderId: number) => {
+    try {
+      const allIncomes = await incomesService.getAllIncomes();
+      const orderIncomes = allIncomes.filter((income: Income) => income.order_id === orderId);
+      
+      const loadedIncomes = orderIncomes.map((income: Income) => ({
+        id: `existing-${income.id}`,
+        amount: income.amount,
+        date: income.date ? new Date(income.date).toISOString().split("T")[0] : null,
+        isExisting: true,
+        backendId: income.id,
+      }));
+      
+      setIncomes(loadedIncomes);
+      setOriginalIncomes(loadedIncomes);
+    } catch (error) {
+      console.error("Error loading incomes:", error);
+    }
+  };
+
+  // Add new income to temporary list
+  const handleAddIncome = () => {
+    if (newIncomeAmount > 0) {
+      const newIncome: TemporaryIncome = {
+        id: `temp-${Date.now()}`,
+        amount: newIncomeAmount,
+        date: newIncomeDate || null,
+        isExisting: false,
+      };
+      setIncomes([...incomes, newIncome]);
+      setNewIncomeAmount(0);
+      setNewIncomeDate(getTodayLocalDate());
+    }
+  };
+
+  // Remove income from temporary list (only new ones)
+  const handleRemoveIncome = (id: string) => {
+    setIncomes(incomes.filter((income) => income.id !== id));
+  };
+
+  const handleCloseClick = () => {
+    if (hasUnsavedChanges()) {
+      openConfirm({
+        title: "Cambios sin guardar",
+        message: "Tienes cambios sin guardar. ¿Estás seguro de que deseas cerrar el formulario?",
+        confirmText: "Cerrar sin guardar",
+        cancelText: "Continuar editando",
+        variant: "warning",
+        onConfirm: () => {
+          toggleModal();
+        },
+      });
+    } else {
+      toggleModal();
+    }
   };
 
   const handleChange = (
@@ -70,23 +171,11 @@ export const CreateOrderForm: React.FC<{
     }));
   };
 
-  const handleRadioChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      status: value as OrderStatus,
-    }));
-  };
-
   const handleDropdownChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const { value, name } = e.target;
-    const typedValue =
-      name === "delivery_type"
-        ? (value as DeliveryType)
-        : (value as PaymentStatus);
     setFormData((prev) => ({
       ...prev,
-      [name]: typedValue,
+      [name]: value as DeliveryType,
     }));
   };
 
@@ -99,32 +188,83 @@ export const CreateOrderForm: React.FC<{
       cancelText: "Cancelar",
       variant: "info",
       onConfirm: async () => {
-        finishOrder(orderId);
+        try {
+          await finishOrder(orderId);
+          showSuccess("Pedido finalizado exitosamente");
+          toggleModal();
+        } catch (error) {
+          console.error("Error finishing order:", error);
+          showError("Error al finalizar el pedido");
+        }
       },
     });
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    //set is submitting state
     try {
-      // change to ISO 8601
+      // Prepare data with all required fields for backend
       const dataToSend = {
-        ...formData,
+        description: formData.description,
+        amount_charged: formData.amount_charged,
+        status: formData.status,
         estimated_delivery_date: formData.estimated_delivery_date
           ? new Date(formData.estimated_delivery_date).toISOString()
           : null,
+        delivery_type: formData.delivery_type,
+        client_name: formData.client_name,
+        client_phone: formData.client_phone || "",
+        notes: formData.notes || "",
       };
+      
+      let orderId: number;
+
       if (selectedOrder) {
+        // EDIT: Update order
         await updateOrder(selectedOrder.id, dataToSend);
+        orderId = selectedOrder.id;
+        showSuccess("Pedido actualizado exitosamente");
       } else {
-        await createOrder(dataToSend);
-        // reset form & close modal
-        setFormData(initialFormData);
-        toggleModal();
+        // CREATE: Create order and get ID
+        const response = await createOrder(dataToSend);
+        orderId = (response as any).id; // Assuming response has id field
+        showSuccess("Pedido creado exitosamente");
       }
+
+      // Create only new incomes (isExisting: false)
+      const newIncomes = incomes.filter(income => !income.isExisting);
+      
+      if (newIncomes.length > 0) {
+        for (const income of newIncomes) {
+          try {
+            await incomesService.createIncome({
+              order_id: orderId,
+              amount: income.amount,
+              date: income.date || null,
+            });
+          } catch (error) {
+            console.error("Failed to create income:", error);
+            // Continue with next income
+          }
+        }
+        showSuccess(`${newIncomes.length} pago(s) registrado(s)`);
+      }
+
+      // Reset form and close modal
+      setFormData(initialFormData);
+      setIncomes([]);
+      setNewIncomeAmount(0);
+      setNewIncomeDate(getTodayLocalDate());
+      setOriginalFormData(initialFormData);
+      setOriginalIncomes([]);
+      toggleModal();
     } catch (error) {
       console.error("Error submitting form:", error);
+      showError(
+        selectedOrder
+          ? "Error al actualizar el pedido"
+          : "Error al crear el pedido"
+      );
     }
   };
 
@@ -133,7 +273,7 @@ export const CreateOrderForm: React.FC<{
       setFormData({
         description: selectedOrder.description || "",
         amount_charged: selectedOrder.amount_charged || 0,
-        status: selectedOrder.status || "pending",
+        status: selectedOrder.status || "confirmed",
         estimated_delivery_date: selectedOrder.estimated_delivery_date
           ? new Date(selectedOrder.estimated_delivery_date)
               .toISOString()
@@ -143,288 +283,418 @@ export const CreateOrderForm: React.FC<{
         client_name: selectedOrder.client_name || "",
         client_phone: selectedOrder.client_phone || "",
         notes: selectedOrder.notes || "",
-        payment_status: selectedOrder.payment_status || "unpaid",
-        is_paid: selectedOrder.is_paid || false,
       });
-      setDisabled(selectedOrder.is_paid || false);
+      // Load existing incomes when editing
+      loadIncomes(selectedOrder.id);
+      
+      // Set original state for change detection
+      const originalData = {
+        description: selectedOrder.description || "",
+        amount_charged: selectedOrder.amount_charged || 0,
+        status: selectedOrder.status || "confirmed",
+        estimated_delivery_date: selectedOrder.estimated_delivery_date
+          ? new Date(selectedOrder.estimated_delivery_date)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        delivery_type: selectedOrder.delivery_type || "shipping",
+        client_name: selectedOrder.client_name || "",
+        client_phone: selectedOrder.client_phone || "",
+        notes: selectedOrder.notes || "",
+      };
+      setOriginalFormData(originalData);
     } else {
       setFormData(initialFormData);
-      setDisabled(false);
+      // Reset incomes when creating new order
+      setIncomes([]);
+      setNewIncomeAmount(0);
+      setNewIncomeDate(getTodayLocalDate());
+      setOriginalFormData(initialFormData);
+      setOriginalIncomes([]);
     }
   }, [selectedOrder, isOpen]);
 
+  const isFormValid = validateForm();
+  const hasChanges = hasUnsavedChanges();
+  const summaryTitle = selectedOrder
+    ? `Pedido #${formatOrderId(selectedOrder.id)}`
+    : "Nuevo pedido";
+  const summaryDescription = selectedOrder
+    ? "Actualiza los detalles del encargo y revisa el estado antes de guardar."
+    : "Completa la información esencial del encargo. Puedes afinar detalles después.";
+  const deliveryTypeLabel = deliveryTypeLabels[formData.delivery_type];
+  const statusLabel = getStatusLabel(formData.status);
+  const estimatedDeliveryLabel = formData.estimated_delivery_date
+    ? new Date(formData.estimated_delivery_date).toLocaleDateString()
+    : "Sin fecha definida";
+  const customerLabel =
+    formData.client_name.trim() || formData.client_phone.trim() || "Sin asignar";
+  const totalPaid = incomes.reduce((sum, income) => sum + income.amount, 0);
+  const statusColor = getStatusColor(formData.status);
+  
+  // Calculate payment status in real-time
+  const paymentStatus = calculatePaymentStatus(
+    formData.amount_charged,
+    incomes.map(inc => ({ amount: inc.amount }))
+  );
+
   return (
     <div className="relative">
-      <button
-        type="button"
-        className="inline-flex items-center rounded-md bg-lime-200/80 px-3 py-2 text-sm font-semibold text-slate-500 shadow-md hover:bg-lime-300/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-500"
-        onClick={openCreateOrder}
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          className="mr-1"
+      {showTrigger && (
+        <button
+          type="button"
+          className="btn-base btn-secondary focus-primary rounded-md shadow-md"
+          onClick={openCreateOrder}
         >
-          <g className="stroke-slate-500" strokeLinecap="round" strokeWidth="3">
-            <path d="M12 19V5" />
-            <path d="M19 12H5" />
-          </g>
-        </svg>
-        Nuevo pedido
-      </button>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            className="mr-1"
+          >
+            <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
+              <path d="M12 19V5" />
+              <path d="M19 12H5" />
+            </g>
+          </svg>
+          Nuevo pedido
+        </button>
+      )}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
-          <div className="mx-4 w-full max-h-[95vh] overflow-auto max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
-            {/* header */}
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {selectedOrder ? `Pedido #${formatOrderId(selectedOrder.id)}` : "Crear nuevo pedido"}
-              </h2>
-              <button
-                type="button"
-                onClick={toggleModal}
-                className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 "
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-            {/* form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <>
-                {/* client_name & client_phone */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="client_name"
-                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                    >
-                      Nombre del cliente
-                    </label>
-                    <input
-                      id="client_name"
-                      name="client_name"
-                      type="text"
-                      value={formData.client_name}
-                      onChange={handleChange}
-                      className="input-base"
-                      placeholder="Ej. Juan Pérez"
-                      disabled={disabled}
-                    />
+        <div className="fixed inset-0 z-50 backdrop-blur-sm" style={{backgroundColor: 'rgb(var(--background) / 0.8)'}}>
+          <div className="absolute inset-y-0 right-0 w-full max-w-6xl overflow-hidden bg-surface shadow-2xl">
+            <form onSubmit={handleSubmit} className="flex h-full flex-col">
+              <div className="border-b px-6 py-5 backdrop-blur sm:px-8 bg-surface border-default">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="max-w-2xl">
+                    <p className="text-brand-primary mb-2 text-xs font-semibold uppercase tracking-[0.22em]">
+                      Gestión de encargos
+                    </p>
+                    <h2 className="text-2xl font-semibold tracking-tight text-primary">
+                      {summaryTitle}
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-secondary">
+                      {summaryDescription}
+                    </p>
                   </div>
-                  <div>
-                    <label
-                      htmlFor="client_phone"
-                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                    >
-                      Teléfono del cliente
-                    </label>
-                    <input
-                      id="client_phone"
-                      name="client_phone"
-                      type="tel"
-                      value={formData.client_phone}
-                      onChange={handleChange}
-                      className="input-base"
-                      placeholder="Ej. +1234567890"
-                      disabled={disabled}
-                    />
-                  </div>
-                </div>
-
-                {/* description */}
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                  >
-                    Pedido
-                  </label>
-                  <input
-                    name="description"
-                    type="text"
-                    value={formData.description}
-                    onChange={handleChange}
-                    className="input-base"
-                    placeholder="Ej. Camisetas personalizadas para evento"
-                    disabled={disabled}
-                    required
-                  />
-                </div>
-
-                {/* amount_charged & payment_status & status */}
-                <div className="grid grid-cols-3 gap-4 items-end">
-                  <div>
-                    <label
-                      htmlFor="amount_charged"
-                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                    >
-                      Total
-                    </label>
-                    <input
-                      name="amount_charged"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={formData.amount_charged}
-                      onChange={handleChange}
-                      className="input-base"
-                      placeholder="0.00"
-                      disabled={disabled}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                      Estado de pago
-                    </label>
-                    <select
-                      name="payment_status"
-                      value={formData.payment_status}
-                      onChange={handleDropdownChange}
-                      className="input-base"
-                      disabled={disabled}
-                    >
-                      <option value="unpaid">Pendiente</option>
-                      <option value="partial">Parcial</option>
-                      <option value="paid">Cancelado</option>
-                    </select>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    {selectedOrder && (
-                      <fieldset>
-                        <legend className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-                          Estado
-                        </legend>
-
-                        <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
-                          {[
-                            { value: "pending", label: "Pendiente" },
-                            { value: "completed", label: "Completado" },
-                          ].map((option) => {
-                            const isActive = formData.status === option.value;
-
-                            return (
-                              <button
-                                key={option.value}
-                                type="button"
-                                disabled={disabled}
-                                onClick={() =>
-                                  handleRadioChange({
-                                    target: {
-                                      value: option.value,
-                                    } as any,
-                                  } as any)
-                                }
-                                className={`disabled-state px-3 py-1 text-sm rounded-md transition-colors
-                                ${
-                                  isActive
-                                    ? "bg-white shadow-sm text-slate-900 dark:bg-slate-700 dark:text-white"
-                                    : "text-slate-600 hover:text-slate-800 dark:text-slate-300"
-                                }
-                              `}
-                              >
-                                {option.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </fieldset>
-                    )}
-                  </div>
-                </div>
-
-                {/* estimated_delivery_date & delivery_type  */}
-                <div className="grid grid-cols-2 gap-4 items-end">
-                  <div>
-                    <label
-                      htmlFor="estimated_delivery_date"
-                      className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                    >
-                      Fecha estimada de entrega
-                    </label>
-                    <input
-                      id="estimated_delivery_date"
-                      name="estimated_delivery_date"
-                      type="date"
-                      value={formData.estimated_delivery_date || ""}
-                      onChange={handleChange}
-                      className="input-base"
-                      disabled={disabled}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                      Tipo de entrega
-                    </label>
-
-                    <select
-                      name="delivery_type"
-                      value={formData.delivery_type}
-                      onChange={handleDropdownChange}
-                      className="input-base"
-                      disabled={disabled}
-                    >
-                      <option value="shipping">Correos</option>
-                      <option value="pickup">Retiro en taller</option>
-                      <option value="delivery">Delivery</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* notes */}
-                <div>
-                  <label
-                    htmlFor="notes"
-                    className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200"
-                  >
-                    Descripción
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="input-base"
-                    placeholder="Notas adicionales"
-                    disabled={disabled}
-                  />
-                </div>
-              </>
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={toggleModal}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  Cancelar
-                </button>
-
-                <div className="flex items-center gap-4">
-                  {selectedOrder && !disabled && (
-                    <button
-                      type="button"
-                      className="btn-base btn-danger"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleFinishClick(selectedOrder.id);
-                      }}
-                    >
-                      Finalizar Pedido
-                    </button>
-                  )}
 
                   <button
-                    type="submit"
-                    className="btn-base btn-ternary"
-                    disabled={!validateForm()}
+                    type="button"
+                    onClick={handleCloseClick}
+                    className="rounded-full border p-2 transition-colors border-default text-secondary hover:bg-surface-elevated"
+                    aria-label="Cerrar"
                   >
-                    {selectedOrder ? "Guardar" : "Crear"}
+                    ✕
                   </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-background">
+                <div className="grid min-h-full gap-8 px-6 py-6 sm:px-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)] lg:gap-10">
+                  <div className="space-y-6">
+                    <section className="overflow-hidden rounded-3xl shadow-sm surface-card">
+                      <div className="grid gap-5 px-6 py-6 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor="client_name"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Nombre del cliente <span className="text-danger">*</span>
+                          </label>
+                          <input
+                            id="client_name"
+                            name="client_name"
+                            type="text"
+                            value={formData.client_name}
+                            onChange={handleChange}
+                            className="input-base"
+                            placeholder="Ej. Juan Pérez"
+                            required
+                          />
+                          {!formData.client_name.trim() && (
+                            <p className="mt-1.5 text-xs font-medium text-danger">
+                              El nombre del cliente es obligatorio.
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="client_phone"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Teléfono del cliente
+                          </label>
+                          <input
+                            id="client_phone"
+                            name="client_phone"
+                            type="tel"
+                            value={formData.client_phone}
+                            onChange={handleChange}
+                            className="input-base"
+                            placeholder="Ej. +506 8888 9999"
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="overflow-hidden rounded-3xl surface-card shadow-sm">
+                      <div className="space-y-5 px-6 py-6">
+                        <div>
+                          <label
+                            htmlFor="description"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Pedido
+                          </label>
+                          <input
+                            id="description"
+                            name="description"
+                            type="text"
+                            value={formData.description}
+                            onChange={handleChange}
+                            className="input-base"
+                            placeholder="Ej. Camisetas personalizadas para evento"
+                            required
+                            autoFocus={!selectedOrder}
+                          />
+                          <p className="mt-1.5 text-xs text-secondary">
+                            Resume el encargo en una sola línea clara.
+                          </p>
+                          {!isFormValid && (
+                            <p className="mt-2 text-xs font-medium text-rose-700">
+                              El campo pedido es obligatorio.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="grid gap-5 sm:grid-cols-2">
+                          <div>
+                            <label
+                              htmlFor="amount_charged"
+                              className="mb-1.5 block text-sm font-medium text-primary"
+                            >
+                              Total
+                            </label>
+                            <input
+                              id="amount_charged"
+                              name="amount_charged"
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={formData.amount_charged}
+                              onChange={handleChange}
+                              className="input-base"
+                              placeholder="0.00"
+                              required
+                            />
+                            {formData.amount_charged > 0 && (
+                              <p className="mt-1 text-xs text-secondary">
+                                {formatCurrency(formData.amount_charged)}
+                              </p>
+                            )}
+                          </div>
+
+                          {selectedOrder && (
+                            <div>
+                              <label
+                                htmlFor="status"
+                                className="mb-1.5 block text-sm font-medium text-primary"
+                              >
+                                Estado del pedido
+                              </label>
+                              <select
+                                id="status"
+                                name="status"
+                                value={formData.status}
+                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as OrderStatus }))}
+                                className="input-base"
+                              >
+                                <option value="confirmed">Confirmado</option>
+                                <option value="in_progress">En progreso</option>
+                                <option value="ready">Listo</option>
+                                <option value="shipped">Enviado</option>
+                                <option value="delivered">Entregado</option>
+                                <option value="cancelled">Cancelado</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="notes"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Notas internas
+                          </label>
+                          <textarea
+                            id="notes"
+                            name="notes"
+                            value={formData.notes}
+                            onChange={handleChange}
+                            className="input-base min-h-28 resize-y"
+                            placeholder="Acabados, colores, tallas, referencias o comentarios para producción."
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="overflow-hidden rounded-3xl surface-card shadow-sm">
+                      <div className="grid gap-5 px-6 py-6 sm:grid-cols-2">
+                        <div>
+                          <label
+                            htmlFor="estimated_delivery_date"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Fecha estimada de entrega
+                          </label>
+                          <input
+                            id="estimated_delivery_date"
+                            name="estimated_delivery_date"
+                            type="date"
+                            value={formData.estimated_delivery_date || ""}
+                            onChange={handleChange}
+                            className="input-base"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="delivery_type"
+                            className="mb-1.5 block text-sm font-medium text-primary"
+                          >
+                            Tipo de entrega
+                          </label>
+                          <select
+                            id="delivery_type"
+                            name="delivery_type"
+                            value={formData.delivery_type}
+                            onChange={handleDropdownChange}
+                            className="input-base"
+                          >
+                            <option value="shipping">Correos</option>
+                            <option value="pickup">Retiro en taller</option>
+                            <option value="delivery">Delivery</option>
+                          </select>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
+                    
+
+                    {/* Payment Status Card */}
+                    <section className="overflow-hidden rounded-3xl shadow-xl surface-elevated">
+                      <div className="border-b px-6 py-4 border-subtle bg-surface-elevated">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-tertiary">
+                          Estado de Pago
+                        </p>
+                      </div>
+
+                      <div className="px-6 py-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${getPaymentBadgeClasses(paymentStatus)}`}>
+                            {getPaymentBadgeText(paymentStatus)}
+                          </span>
+                          <span className="text-2xl font-bold text-primary">
+                            {Math.round(paymentStatus.percentage_paid)}%
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-subtle rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              paymentStatus.is_fully_paid
+                                ? 'bg-success'
+                                : paymentStatus.percentage_paid > 0
+                                ? 'bg-warning'
+                                : 'bg-danger'
+                            }`}
+                            style={{ width: `${Math.min(paymentStatus.percentage_paid, 100)}%` }}
+                            role="progressbar"
+                            aria-valuenow={paymentStatus.percentage_paid}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                          />
+                        </div>
+
+                        {/* Payment Details */}
+                        <dl className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <dt className="text-secondary">Total cobrado</dt>
+                            <dd className="font-semibold text-success">
+                              {formatCurrency(paymentStatus.total_paid)}
+                            </dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="text-secondary">Por cobrar</dt>
+                            <dd className="font-semibold text-danger">
+                              {formatCurrency(paymentStatus.remaining)}
+                            </dd>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-subtle">
+                            <dt className="text-secondary">Total pedido</dt>
+                            <dd className="font-bold text-primary">
+                              {formatCurrency(paymentStatus.amount_charged)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+                    </section>
+
+                    <OrderPaymentsSection
+                      incomes={incomes}
+                      newIncomeAmount={newIncomeAmount}
+                      newIncomeDate={newIncomeDate}
+                      onIncomeAmountChange={setNewIncomeAmount}
+                      onIncomeDateChange={setNewIncomeDate}
+                      onAddIncome={handleAddIncome}
+                      onRemoveIncome={handleRemoveIncome}
+                    />
+                  </aside>
+                </div>
+              </div>
+
+              <div className="border-t px-6 py-4 backdrop-blur sm:px-8 bg-surface border-default">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="text-sm text-secondary">
+                    Los cambios se guardan sobre el pedido actual.
+                  </div>
+
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={handleCloseClick}
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+                    >
+                      Cancelar
+                    </button>
+
+                    {selectedOrder && (
+                      <button
+                        type="button"
+                        className="btn-base btn-danger justify-center rounded-xl"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleFinishClick(selectedOrder.id);
+                        }}
+                      >
+                        Finalizar pedido
+                      </button>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="btn-base btn-ternary justify-center rounded-xl px-5 py-2.5"
+                      disabled={!isFormValid || (selectedOrder && !hasChanges)}
+                    >
+                      {selectedOrder ? "Guardar cambios" : "Crear pedido"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </form>
@@ -439,6 +709,12 @@ export const CreateOrderForm: React.FC<{
           {...config}
         />
       )}
+      {/* Toast Notification */}
+      <Toast
+        isVisible={isToastVisible}
+        onClose={hideToast}
+        {...toastConfig}
+      />
     </div>
   );
 };

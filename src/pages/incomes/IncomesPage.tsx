@@ -1,28 +1,54 @@
-import React from "react";
+import React, { useState } from "react";
+import { useIncomes } from "../../hooks";
+import { IncomesHeader } from "./IncomesHeader";
+import { IncomesTable } from "./IncomesTable";
 
 export const IncomesPage: React.FC = () => {
+  const { 
+    incomes, 
+    loading, 
+    createIncome, 
+    updateIncome, 
+    selectedIncome, 
+    setSelectedIncome 
+  } = useIncomes();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    if (isModalOpen) {
+      setSelectedIncome(null);
+    }
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const openCreateIncome = () => {
+    setSelectedIncome(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectIncome = (income: any) => {
+    setSelectedIncome(income);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
-            Ingresos
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Gestiona todos tus ingresos y ganancias
-          </p>
-        </div>
+        <IncomesHeader
+          isOpen={isModalOpen}
+          selectedIncome={selectedIncome}
+          createIncome={createIncome}
+          updateIncome={updateIncome}
+          toggleModal={toggleModal}
+          openCreateIncome={openCreateIncome}
+        />
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm ring-1 ring-slate-200/40 p-6">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-2">
-              Módulo de Ingresos
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400">
-              Funcionalidad próximamente disponible
-            </p>
-          </div>
-        </div>
+        <IncomesTable
+          incomes={incomes}
+          loading={loading}
+          onSelectIncome={handleSelectIncome}
+        />
       </div>
     </div>
   );

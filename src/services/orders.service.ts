@@ -1,4 +1,5 @@
 import { api } from "./api";
+import type { PaymentStatus } from "../pages/orders/types";
 
 export const ordersService = {
   createOrder: async (orderData: any) => {
@@ -9,6 +10,9 @@ export const ordersService = {
   },
   getOrderById: async (orderId: string) => {
     return api.get(`/orders/${orderId}`);
+  },
+  getPaymentStatus: async (orderId: string): Promise<PaymentStatus> => {
+    return api.get(`/orders/${orderId}/payment-status`);
   },
   updateOrder: async (orderId: string, orderData: any) => {
     return api.put(`/orders/${orderId}`, orderData);

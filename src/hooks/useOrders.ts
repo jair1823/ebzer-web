@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { ordersService } from "../services";
-import type { Order, OrderFormData } from "../pages/orders/types";
+import type { Order, OrderFormData, PaymentStatus } from "../pages/orders/types";
 
 export const useOrders = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [paymentStatuses, setPaymentStatuses] = useState<Map<number, PaymentStatus>>(new Map());
 
   const createOrder = async (orderData: OrderFormData) => {
     const response = await ordersService.createOrder(orderData);
@@ -18,6 +19,10 @@ export const useOrders = () => {
     try {
       const response = await ordersService.getAllOrders();
       setOrders(response);
+      
+      // Cargar payment statuses para todas las órdenes
+      await loadPaymentStatuses(response);
+      
       return response;
     } catch (error) {
       //todo handle error properly
@@ -26,6 +31,42 @@ export const useOrders = () => {
       setLoading(false);
     }
   }, []);
+
+  const loadPaymentStatuses = async (ordersList: Order[]) => {
+    try {
+      const statusesMap = new Map<number, PaymentStatus>();
+      
+      // Cargar payment status de cada orden en paralelo
+      const statusPromises = ordersList.map(async (order) => {
+        try {
+          const status = await ordersService.getPaymentStatus(order.id.toString());
+          return { orderId: order.id, status };
+        } catch (error) {
+          console.error(`Error loading payment status for order ${order.id}:`, error);
+          // Retornar status por defecto en caso de error
+          return {
+            orderId: order.id,
+            status: {
+              total_paid: 0,
+              amount_charged: order.amount_charged,
+              remaining: order.amount_charged,
+              percentage_paid: 0,
+              is_fully_paid: false,
+            },
+          };
+        }
+      });
+
+      const results = await Promise.all(statusPromises);
+      results.forEach(({ orderId, status }) => {
+        statusesMap.set(orderId, status);
+      });
+
+      setPaymentStatuses(statusesMap);
+    } catch (error) {
+      console.error("Error loading payment statuses:", error);
+    }
+  };
 
   const updateOrder = async (orderId: number, orderData: any) => {
     const response = await ordersService.updateOrder(orderId.toString(), orderData);
@@ -40,9 +81,24 @@ export const useOrders = () => {
     return response;
   };
 
+  const getPaymentStatusForOrder = (orderId: number): PaymentStatus | null => {
+    return paymentStatuses.get(orderId) || null;
+  };
+
   useEffect(() => {
     getAllOrders();
   }, [getAllOrders]);
 
-  return { createOrder, getAllOrders, updateOrder, finishOrder, orders, loading, selectedOrder, setSelectedOrder };
+  return { 
+    createOrder, 
+    getAllOrders, 
+    updateOrder, 
+    finishOrder, 
+    orders, 
+    loading, 
+    selectedOrder, 
+    setSelectedOrder,
+    paymentStatuses,
+    getPaymentStatusForOrder,
+  };
 };

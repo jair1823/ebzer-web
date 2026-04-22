@@ -1,32 +1,323 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
 @layer base {
-  /* body {
-    @apply bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50;
-  } */
+  /* Base styles con soporte dark mode */
+  body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--text-primary));
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
 }
 
 @layer components {
-  /* Input base styles with disabled state */
+  /* ========================================
+     Background Utilities
+     ======================================== */
+
+  .bg-background {
+    background-color: rgb(var(--background));
+  }
+
+  .bg-surface {
+    background-color: rgb(var(--surface));
+  }
+
+  .bg-surface-elevated {
+    background-color: rgb(var(--surface-elevated));
+  }
+
+  .bg-surface-hover {
+    background-color: rgb(var(--surface-hover));
+  }
+
+  .bg-primary-soft {
+    background-color: rgb(var(--primary-soft));
+  }
+
+  .bg-primary-strong {
+    background-color: rgb(var(--primary-strong));
+  }
+
+  .bg-secondary-soft {
+    background-color: rgb(var(--secondary-soft));
+  }
+
+  .bg-secondary-strong {
+    background-color: rgb(var(--secondary-strong));
+  }
+
+  .bg-accent {
+    background-color: rgb(var(--accent));
+  }
+
+  .bg-accent-soft {
+    background-color: rgb(var(--accent-soft));
+  }
+
+  .bg-info {
+    background-color: rgb(var(--info));
+  }
+
+  .bg-info-soft {
+    background-color: rgb(var(--info-soft));
+  }
+
+  .bg-info-strong {
+    background-color: rgb(var(--info-strong));
+  }
+
+  .bg-warning {
+    background-color: rgb(var(--warning));
+  }
+
+  .bg-warning-soft {
+    background-color: rgb(var(--warning-soft));
+  }
+
+  .bg-danger {
+    background-color: rgb(var(--danger));
+  }
+
+  .bg-muted {
+    background-color: rgb(var(--muted));
+  }
+
+  .bg-success {
+    background-color: rgb(var(--success));
+  }
+
+  .bg-success-soft {
+    background-color: rgb(var(--success-soft));
+  }
+
+  /* ========================================
+     Text Utilities
+     ======================================== */
+
+  .text-primary {
+    color: rgb(var(--text-primary));
+  }
+
+  .text-secondary {
+    color: rgb(var(--text-secondary));
+  }
+
+  .text-tertiary {
+    color: rgb(var(--text-tertiary));
+  }
+
+  .text-on-primary {
+    color: rgb(var(--text-on-primary));
+  }
+
+  .text-on-accent {
+    color: rgb(var(--text-on-accent));
+  }
+
+  .text-brand-primary {
+    color: rgb(var(--primary));
+  }
+
+  .text-brand-secondary {
+    color: rgb(var(--secondary));
+  }
+
+  .text-info {
+    color: rgb(var(--info-foreground));
+  }
+
+  .text-warning {
+    color: rgb(var(--warning-foreground));
+  }
+
+  .text-danger {
+    color: rgb(var(--danger));
+  }
+
+  /* ========================================
+     Border Utilities
+     ======================================== */
+
+  .border-default {
+    border-color: rgb(var(--border));
+  }
+
+  .border-subtle {
+    border-color: rgb(var(--border-subtle));
+  }
+
+  .border-strong {
+    border-color: rgb(var(--border-strong));
+  }
+
+  .border-primary {
+    border-color: rgb(var(--primary));
+  }
+
+  /* ========================================
+     Input Components
+     ======================================== */
+
   .input-base {
-    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm;
-    @apply focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500;
-    @apply dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
-    @apply disabled:cursor-not-allowed disabled:bg-slate-200/50 disabled:text-slate-500;
+    @apply block w-full rounded-lg border px-3 py-2 text-sm shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-0;
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--border));
+    color: rgb(var(--text-primary));
+    transition: all 0.15s ease-in-out;
   }
 
-  /* Button base styles with disabled state */
+  .input-base:focus {
+    border-color: rgb(var(--focus));
+    --tw-ring-color: rgb(var(--focus) / 0.3);
+  }
+
+  /* ========================================
+     Button Components
+     ======================================== */
+
   .btn-base {
-    @apply inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold shadow transition-colors;
-    @apply disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold shadow-sm;
+    @apply transition-all duration-150 ease-in-out;
+    @apply disabled:cursor-not-allowed disabled:opacity-60;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
   }
 
-  .btn-ternary {
-    @apply bg-emerald-300 text-white hover:bg-emerald-400/70;
+  .btn-primary {
+    background-color: rgb(var(--primary));
+    color: rgb(var(--text-on-primary));
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: rgb(var(--primary-hover));
+  }
+
+  .btn-primary:active:not(:disabled) {
+    background-color: rgb(var(--primary-active));
+  }
+
+  .btn-primary:focus-visible {
+    --tw-ring-color: rgb(var(--primary) / 0.5);
+  }
+
+  .btn-secondary {
+    background-color: rgb(var(--secondary));
+    color: rgb(var(--text-on-primary));
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background-color: rgb(var(--secondary-hover));
+  }
+
+  .btn-secondary:active:not(:disabled) {
+    background-color: rgb(var(--secondary-active));
+  }
+
+  .btn-secondary:focus-visible {
+    --tw-ring-color: rgb(var(--secondary) / 0.5);
+  }
+
+  .btn-accent {
+    background-color: rgb(var(--accent));
+    color: rgb(var(--text-on-accent));
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    background-color: rgb(var(--accent-hover));
+  }
+
+  .btn-accent:active:not(:disabled) {
+    background-color: rgb(var(--accent-active));
+  }
+
+  .btn-accent:focus-visible {
+    --tw-ring-color: rgb(var(--accent) / 0.5);
   }
 
   .btn-danger {
-    @apply bg-red-400/80 text-white hover:bg-red-500/80;
+    background-color: rgb(var(--danger));
+    color: rgb(var(--text-on-primary));
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: rgb(var(--danger-hover));
+  }
+
+  .btn-danger:active:not(:disabled) {
+    background-color: rgb(var(--danger-active));
+  }
+
+  .btn-danger:focus-visible {
+    --tw-ring-color: rgb(var(--danger) / 0.5);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border: 1px solid rgb(var(--border));
+    color: rgb(var(--text-primary));
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background-color: rgb(var(--surface-hover));
+  }
+
+  .btn-outline:focus-visible {
+    --tw-ring-color: rgb(var(--focus) / 0.3);
+  }
+
+  /* ========================================
+     Utility Classes
+     ======================================== */
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: rgb(var(--focus) / 0.3);
+  }
+
+  .surface-card {
+    background-color: rgb(var(--surface));
+    border: 1px solid rgb(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Divider */
+  .divider {
+    border-color: rgb(var(--border));
+  }
+
+  /* Badges */
+  .badge-success {
+    background-color: rgb(var(--success-soft));
+    color: rgb(var(--secondary-foreground));
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-warning {
+    background-color: rgb(var(--warning-soft));
+    color: rgb(var(--warning-foreground));
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-danger {
+    background-color: rgb(var(--danger-soft));
+    color: rgb(var(--danger));
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-info {
+    background-color: rgb(var(--info-soft));
+    color: rgb(var(--info-foreground));
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Table */
+  .table-row-interactive {
+    @apply cursor-pointer transition-colors;
+  }
+
+  .table-row-interactive:hover {
+    background-color: rgb(var(--primary-soft) / 0.3);
   }
 
   /* Generic disabled state utility */

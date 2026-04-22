@@ -1,15 +1,16 @@
 import React from "react";
 import { ConfirmModal } from "../../components";
 import { useConfirmModal } from "../../hooks";
-import type { Order } from "./types";
-import { formatOrderId, formatCurrency } from "../../utils";
+import type { Order, PaymentStatus } from "./types";
+import { formatOrderId, getStatusLabel, getStatusBadgeClasses, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
 
 export const OrdersTable: React.FC<{
   orders: Order[];
   loading: boolean;
   onClickRow: (orderId: number) => void;
   finishOrder: (orderId: number) => void;
-}> = ({ orders, loading, onClickRow, finishOrder }) => {
+  paymentStatuses: Map<number, PaymentStatus>;
+}> = ({ orders, loading, onClickRow, finishOrder, paymentStatuses }) => {
   const { isOpen, config, openConfirm, closeConfirm } = useConfirmModal();
 
   const handleFinishClick = (orderId: number) => {
@@ -26,22 +27,28 @@ export const OrdersTable: React.FC<{
     });
   };
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200/40">
-        <table className="min-w-full divide-y divide-slate-200/30">
-          <thead className="bg-red-200/60">
+    <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mt-2 overflow-hidden rounded-xl shadow-sm surface-card">
+        <table className="min-w-full">
+          <thead className="bg-primary-soft">
             <tr>
-              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                # Pedido
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
+                Estado
               </th>
-              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
                 Cliente
               </th>
-              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 w-1 whitespace-nowrap">
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
+                Estado de Pago
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
+                Monto
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary w-1 whitespace-nowrap">
                 Entrega Estimada
               </th>
-              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Total
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
+                #
               </th>
               {/* th to button of finish order */}
               <th></th>
@@ -52,55 +59,74 @@ export const OrdersTable: React.FC<{
             <tbody>
               <tr>
                 <td
-                  colSpan={4}
-                  className="px-6 py-4 text-center text-sm text-slate-500"
+                  colSpan={7}
+                  className="px-6 py-12 text-center text-sm text-secondary"
                 >
-                  {loading ? "Cargando pedidos..." : "No hay pedidos disponibles."}
+                  {loading ? (
+                    "Cargando pedidos..."
+                  ) : orders.length === 0 ? (
+                    <div className="space-y-2">
+                      <p className="font-medium text-primary">No se encontraron pedidos</p>
+                      <p className="text-xs">
+                        {/* This message will show when filters are active but no results */}
+                        Intenta ajustar los criterios de búsqueda o limpiar los filtros.
+                      </p>
+                    </div>
+                  ) : (
+                    "No hay pedidos disponibles."
+                  )}
                 </td>
               </tr>
             </tbody>
           ) : (
-            <tbody className="divide-y divide-slate-100/40 bg-white">
+            <tbody className="bg-surface">
               {orders.map((order) => (
                 <tr
                   key={order.id}
-                  className="hover:bg-slate-100 transition-colors"
+                  className="table-row-interactive"
                   onClick={() => onClickRow(order.id)}
                 >
-                  <td className="px-6 py-3 text-sm text-slate-700 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span
-                        className={`h-3 w-3 rounded-full ${
-                          order.status === "pending"
-                            ? "bg-red-900/80"
-                            : order.status === "completed"
-                            ? "bg-lime-200/80"
-                            : "bg-cyan-300/80" /* default case */
-                        }`}
-                      ></span>
-                      {/* status */}
-                      {formatOrderId(order.id)}
-                    </div>
+                  <td className="px-6 py-3 text-sm text-center">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getStatusBadgeClasses(order.status)}`}>
+                      <span className="h-2 w-2 rounded-full bg-current opacity-80"></span>
+                      {getStatusLabel(order.status)}
+                    </span>
                   </td>
-                  <td className="px-6 py-3 text-sm text-slate-700 text-center">
+                  <td className="px-6 py-3 text-sm text-primary text-center">
                     {order.client_name
                       ? order.client_name
                       : order.client_phone
                       ? order.client_phone
                       : "-"}
                   </td>
-                  <td className="px-6 py-3 text-sm text-slate-700 text-center whitespace-nowrap">
-                    {new Date(
-                      order.estimated_delivery_date || ""
-                    ).toLocaleDateString()}
+                  <td className="px-6 py-3 text-sm text-center">
+                    {paymentStatuses.get(order.id) ? (
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getPaymentBadgeClasses(paymentStatuses.get(order.id)!)}`}>
+                        {getPaymentBadgeText(paymentStatuses.get(order.id)!)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-tertiary">Cargando...</span>
+                    )}
                   </td>
-                  <td className="px-6 py-3 text-sm text-slate-700 text-center">
-                    {formatCurrency(order.amount_charged)}
+                  <td className="px-6 py-3 text-sm text-primary text-center font-medium">
+                    {new Intl.NumberFormat("es-CR", {
+                      style: "currency",
+                      currency: "CRC",
+                      minimumFractionDigits: 0,
+                    }).format(order.amount_charged)}
                   </td>
-                  <td className="text-sm text-slate-700">
-                    {!order.is_paid && (
+                  <td className="px-6 py-3 text-sm text-primary text-center whitespace-nowrap">
+                    {order.estimated_delivery_date
+                      ? new Date(order.estimated_delivery_date).toLocaleDateString()
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-secondary text-center font-mono">
+                    {formatOrderId(order.id)}
+                  </td>
+                  <td className="text-sm">
+                    {order.status !== "delivered" && order.status !== "cancelled" && (
                       <button
-                        className="px-3 py-1 bg-red-400/80 text-white rounded-md hover:bg-red-500/80 transition-colors"
+                        className="btn-base btn-accent rounded-md px-3 py-1 text-xs"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.stopPropagation();
                           handleFinishClick(order.id);
