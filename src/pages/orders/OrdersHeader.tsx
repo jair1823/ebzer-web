@@ -1,6 +1,7 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
 import type { Order, OrderFormData, OrderFilters, OrderStatus } from "./types";
+import styles from "./OrdersHeader.module.css";
 
 const statusOptions: { value: OrderStatus; label: string; colorClass: string; textClass: string }[] = [
   { value: "confirmed", label: "Confirmado", colorClass: "bg-info", textClass: "text-white" },
@@ -89,23 +90,23 @@ export const OrdersHeader: React.FC<{
   }, [showFilters]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+    <div className={`mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8 ${styles.header}`}>
       {/* Inline Header - Una sola línea */}
       <div className="flex items-center justify-between gap-4">
         
         {/* Título compacto */}
-        <h1 className="text-xl font-semibold text-primary whitespace-nowrap">
+        <h1 className={`text-xl font-semibold text-primary whitespace-nowrap ${styles.title}`}>
           Pedidos
         </h1>
 
         {/* Botones de acción inline */}
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${styles.actionGroup}`}>
           
           {/* Botón Filtros con dropdown */}
           <div className="relative" ref={filterRef}>
             <button
               type="button"
-              className="btn-base btn-outline rounded-md text-xs px-3 py-1.5"
+              className={`btn-base btn-outline rounded-md text-xs px-3 py-1.5 ${styles.filterButton}`}
               onClick={() => setShowFilters(!showFilters)}
               aria-label="Mostrar filtros"
             >
@@ -123,7 +124,7 @@ export const OrdersHeader: React.FC<{
               </svg>
               Filtros
               {hasActiveFilters() && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-accent text-white">
+                <span className={`ml-1.5 ${styles.badge} bg-accent text-white`} aria-hidden="false">
                   {getActiveFiltersCount()}
                 </span>
               )}
@@ -131,7 +132,7 @@ export const OrdersHeader: React.FC<{
 
             {/* Dropdown de filtros */}
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-96 bg-surface border border-subtle rounded-lg shadow-lg z-50">
+              <div className={`absolute right-0 mt-2 w-96 bg-surface border border-subtle rounded-lg shadow-lg z-50 ${styles.dropdown}`}>
                 <div className="p-4 space-y-4">
                   
                   {/* Fechas en una fila */}
@@ -204,7 +205,7 @@ export const OrdersHeader: React.FC<{
           {hasActiveFilters() && (
             <button
               type="button"
-              className="btn-base btn-outline rounded-md text-xs px-3 py-1.5"
+              className={`btn-base btn-outline rounded-md text-xs px-3 py-1.5 ${styles.clearButton}`}
               onClick={handleClearFilters}
               aria-label="Limpiar filtros"
             >
@@ -228,7 +229,7 @@ export const OrdersHeader: React.FC<{
           {/* Botón Nuevo - compacto */}
           <button
             type="button"
-            className="btn-base btn-secondary rounded-md text-xs px-3 py-1.5"
+            className={`btn-base btn-secondary rounded-md text-xs px-3 py-1.5 ${styles.primaryButton}`}
             onClick={openCreateOrder}
             aria-label="Crear nuevo pedido"
           >

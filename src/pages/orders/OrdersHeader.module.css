@@ -1,0 +1,63 @@
+:root {
+  /* Material-like tokens (mapped to project colors where possible) */
+}
+
+.header {
+  /* enforce vertical rhythm and visual separation */
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: var(--header-bg, transparent);
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.title {
+  font-size: 20px; /* Material headline6 */
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  color: var(--color-on-surface, #0f172a); /* stronger title color */
+}
+
+.actionGroup {
+  /* slightly larger gap for action buttons */
+  gap: 12px;
+}
+
+.filterButton {
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearButton {
+  opacity: 0.95;
+}
+
+.primaryButton {
+  box-shadow: 0 1px 2px rgba(16,24,40,0.05);
+}
+
+.dropdown {
+  min-width: 320px;
+  max-width: 38rem; /* matches w-96 approximation */
+  padding: 0; /* inner padding is handled by child p-4 */
+}
+
+/* Small badge for active filters */
+.badge {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
