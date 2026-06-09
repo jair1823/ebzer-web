@@ -1,6 +1,6 @@
 import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { OrdersPage, IncomesPage, ExpensesPage } from "./pages";
+import { OrdersPage, ExpensesPage } from "./pages";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { ThemeToggle } from "./components";
 
@@ -12,10 +12,6 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <OrdersPage />,
-      },
-      {
-        path: "incomes",
-        element: <IncomesPage />,
       },
       {
         path: "expenses",
