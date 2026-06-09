@@ -1,16 +1,8 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
-import type { Order, OrderFormData, OrderFilters, OrderStatus } from "./types";
+import type { Order, OrderFormData, OrderFilters } from "./types";
+import { StatusMultiSelect } from "../../components";
 import styles from "./OrdersHeader.module.css";
-
-const statusOptions: { value: OrderStatus; label: string; colorClass: string; textClass: string }[] = [
-  { value: "confirmed", label: "Confirmado", colorClass: "bg-info", textClass: "text-white" },
-  { value: "in_progress", label: "En progreso", colorClass: "bg-warning", textClass: "text-white" },
-  { value: "ready", label: "Listo", colorClass: "bg-success", textClass: "text-white" },
-  { value: "shipped", label: "Enviado", colorClass: "bg-accent", textClass: "text-white" },
-  { value: "delivered", label: "Entregado", colorClass: "bg-secondary", textClass: "text-primary" },
-  { value: "cancelled", label: "Cancelado", colorClass: "bg-danger", textClass: "text-white" },
-];
 
 export const OrdersHeader: React.FC<{
   filters: OrderFilters;
@@ -41,23 +33,11 @@ export const OrdersHeader: React.FC<{
     }));
   };
 
-  const handleStatusToggle = (status: OrderStatus) => {
-    setFilters((prev) => {
-      const isSelected = prev.statuses.includes(status);
-      return {
-        ...prev,
-        statuses: isSelected
-          ? prev.statuses.filter((s) => s !== status)
-          : [...prev.statuses, status],
-      };
-    });
-  };
-
   const handleClearFilters = () => {
     setFilters({
       dateFrom: null,
       dateTo: null,
-      statuses: [],
+      status_ids: [],
     });
   };
 
@@ -65,14 +45,14 @@ export const OrdersHeader: React.FC<{
     let count = 0;
     if (filters.dateFrom) count++;
     if (filters.dateTo) count++;
-    if (filters.statuses.length > 0) count += filters.statuses.length;
+    if (filters.status_ids.length > 0) count += filters.status_ids.length;
     return count;
   };
 
   const hasActiveFilters = (): boolean => {
     return filters.dateFrom !== null || 
            filters.dateTo !== null || 
-           filters.statuses.length > 0;
+           filters.status_ids.length > 0;
   };
 
   // Close filters dropdown when clicking outside
@@ -163,37 +143,17 @@ export const OrdersHeader: React.FC<{
                     </div>
                   </div>
 
-                  {/* Estados compactos */}
+                  {/* Status multi-select */}
                   <div>
                     <label className="block text-xs font-medium text-secondary mb-2">
                       Estados
                     </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {statusOptions.map((option) => {
-                        const isSelected = filters.statuses.includes(option.value);
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => handleStatusToggle(option.value)}
-                            className={`
-                              flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium
-                              transition-all duration-150
-                              ${
-                                isSelected
-                                  ? `${option.colorClass} ${option.textClass} shadow-sm`
-                                  : "bg-surface-elevated text-secondary border border-subtle hover:bg-surface-hover"
-                              }
-                            `}
-                          >
-                            {isSelected && (
-                              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                            )}
-                            {option.label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <StatusMultiSelect
+                      value={filters.status_ids}
+                      onChange={(ids) =>
+                        setFilters((prev) => ({ ...prev, status_ids: ids }))
+                      }
+                    />
                   </div>
 
                 </div>

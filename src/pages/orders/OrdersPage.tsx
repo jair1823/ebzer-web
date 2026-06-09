@@ -4,6 +4,7 @@ import { OrdersTable } from "./OrdersTable";
 import type { Order, OrderFilters } from "./types";
 
 import { useOrders } from "../../hooks";
+import { isoDateStringToLocalDate } from "../../utils";
 
 export const OrdersPage: React.FC = () => {
   const {
@@ -20,7 +21,7 @@ export const OrdersPage: React.FC = () => {
   const [filters, setFilters] = React.useState<OrderFilters>({
     dateFrom: null,
     dateTo: null,
-    statuses: [],
+    status_ids: [],
   });
 
   const toggleModal = () => {
@@ -41,20 +42,20 @@ export const OrdersPage: React.FC = () => {
     return orders.filter((order) => {
       // Filter by date range (using estimated_delivery_date)
       if (filters.dateFrom && order.estimated_delivery_date) {
-        const orderDate = new Date(order.estimated_delivery_date);
-        const fromDate = new Date(filters.dateFrom);
-        if (orderDate < fromDate) return false;
+        const orderDate = isoDateStringToLocalDate(order.estimated_delivery_date);
+        const fromDate = isoDateStringToLocalDate(filters.dateFrom);
+        if (orderDate && fromDate && orderDate < fromDate) return false;
       }
 
       if (filters.dateTo && order.estimated_delivery_date) {
-        const orderDate = new Date(order.estimated_delivery_date);
-        const toDate = new Date(filters.dateTo);
-        if (orderDate > toDate) return false;
+        const orderDate = isoDateStringToLocalDate(order.estimated_delivery_date);
+        const toDate = isoDateStringToLocalDate(filters.dateTo);
+        if (orderDate && toDate && orderDate > toDate) return false;
       }
 
-      // Filter by status (empty array = show all)
-      if (filters.statuses.length > 0) {
-        if (!filters.statuses.includes(order.status)) return false;
+      // Filter by status_id (empty array = show all)
+      if (filters.status_ids.length > 0) {
+        if (!filters.status_ids.includes(order.status_id)) return false;
       }
 
       return true;

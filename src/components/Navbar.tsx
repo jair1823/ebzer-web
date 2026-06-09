@@ -7,6 +7,7 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { path: "/", label: "Pedidos", icon: "📦" },
     { path: "/expenses", label: "Gastos", icon: "📊" },
+    { path: "/settings/statuses", label: "Estados", icon: "⚙️" },
   ];
 
   return (

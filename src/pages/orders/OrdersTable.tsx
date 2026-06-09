@@ -1,8 +1,8 @@
 import React from "react";
-import { ConfirmModal } from "../../components";
+import { ConfirmModal, StatusBadge } from "../../components";
 import { useConfirmModal } from "../../hooks";
 import type { Order, PaymentStatus } from "./types";
-import { formatOrderId, getStatusLabel, getStatusColor, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
+import { formatOrderId, getPaymentBadgeClasses, getPaymentBadgeText, formatIsoDateStringToLocale } from "../../utils";
 
 export const OrdersTable: React.FC<{
   orders: Order[];
@@ -36,6 +36,9 @@ export const OrdersTable: React.FC<{
                 Pedido
               </th>
               <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
                 Cliente
               </th>
               <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
@@ -56,7 +59,7 @@ export const OrdersTable: React.FC<{
             <tbody>
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-6 py-12 text-center text-sm text-secondary"
                 >
                   {loading ? (
@@ -84,10 +87,18 @@ export const OrdersTable: React.FC<{
                   onClick={() => onClickRow(order.id)}
                 >
                   <td className="px-6 py-3 text-sm text-left">
-                    <span className={`inline-flex items-center gap-2`}>
-                      <span className={`${getStatusColor(order.status)} h-3 w-3 rounded-full inline-block`} aria-hidden="true" title={getStatusLabel(order.status)}></span>
-                      <span className="font-mono text-sm text-primary">{formatOrderId(order.id)}</span>
-                    </span>
+                    <span className="font-mono text-sm text-primary">{formatOrderId(order.id)}</span>
+                  </td>
+                  <td className="px-6 py-3 text-sm text-center">
+                    {order.status ? (
+                      <StatusBadge
+                        color={order.status.color}
+                        label={order.status.display_name}
+                        size="sm"
+                      />
+                    ) : (
+                      <span className="text-xs text-tertiary">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-sm text-primary text-center">
                     {order.client_name
@@ -114,11 +125,11 @@ export const OrdersTable: React.FC<{
                   </td>
                   <td className="px-6 py-3 text-sm text-primary text-center whitespace-nowrap">
                     {order.estimated_delivery_date
-                      ? new Date(order.estimated_delivery_date).toLocaleDateString()
+                    ? formatIsoDateStringToLocale(order.estimated_delivery_date)
                       : "-"}
                   </td>
                   <td className="text-sm">
-                    {order.status !== "delivered" && order.status !== "cancelled" && (
+                    {!order.status?.is_final_status && (
                       <button
                         className="btn-base btn-accent rounded-md px-3 py-1 text-xs"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

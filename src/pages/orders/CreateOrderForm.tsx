@@ -7,15 +7,14 @@ import React, {
 import type {
   OrderFormData,
   DeliveryType,
-  OrderStatus,
   Order,
   TemporaryIncome,
 } from "./types";
 import type { Income } from "../incomes/types";
-import { ConfirmModal, Toast } from "../../components";
+import { ConfirmModal, Toast, StatusPicker } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
 import { incomesService } from "../../services";
-import { formatOrderId, getStatusLabel, formatCurrency, getStatusColor, calculatePaymentStatus, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
+import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
 import { OrderPaymentsSection } from "./OrderPaymentsSection";
 
 // Helper to get today's date in YYYY-MM-DD format (local timezone)
@@ -23,27 +22,30 @@ const getTodayLocalDate = (): string => {
   return new Date().toLocaleDateString('en-CA'); // en-CA produces YYYY-MM-DD format
 };
 
+// Helper to get local date plus N days in YYYY-MM-DD format
+const getLocalDatePlusDays = (days: number): string => {
+  const now = new Date();
+  const local = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+  return local.toLocaleDateString('en-CA');
+};
+
 const initialFormData: OrderFormData = {
   description: "",
   amount_charged: 0,
-  status: "confirmed", // default status per backend
-  estimated_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // default 4 days from now - yyyy-MM-dd
+  status_id: null,
+  // Default estimated delivery = creation day + 3 days (do not count creation day)
+  estimated_delivery_date: getLocalDatePlusDays(3),
   delivery_type: "shipping",
   client_name: "",
   client_phone: "",
   notes: "",
 };
 
-const deliveryTypeLabels: Record<DeliveryType, string> = {
-  shipping: "Correos",
-  pickup: "Retiro en taller",
-  delivery: "Delivery",
-};
 
 export const CreateOrderForm: React.FC<{
   isOpen: boolean;
   selectedOrder?: Order;
-  createOrder: (data: OrderFormData) => Promise<void>;
+  createOrder: (data: OrderFormData) => Promise<{ id: number } | unknown>;
   updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
   toggleModal: () => void;
   openCreateOrder: () => void;
@@ -207,9 +209,9 @@ export const CreateOrderForm: React.FC<{
       const dataToSend = {
         description: formData.description,
         amount_charged: formData.amount_charged,
-        status: formData.status,
+        status_id: formData.status_id,
         estimated_delivery_date: formData.estimated_delivery_date
-          ? new Date(formData.estimated_delivery_date).toISOString()
+          ? new Date(`${formData.estimated_delivery_date}T00:00:00`).toISOString()
           : null,
         delivery_type: formData.delivery_type,
         client_name: formData.client_name,
@@ -227,7 +229,7 @@ export const CreateOrderForm: React.FC<{
       } else {
         // CREATE: Create order and get ID
         const response = await createOrder(dataToSend);
-        orderId = (response as any).id; // Assuming response has id field
+        orderId = (response as unknown as { id: number }).id;
         showSuccess("Pedido creado exitosamente");
       }
 
@@ -273,11 +275,13 @@ export const CreateOrderForm: React.FC<{
       setFormData({
         description: selectedOrder.description || "",
         amount_charged: selectedOrder.amount_charged || 0,
-        status: selectedOrder.status || "confirmed",
+        status_id: selectedOrder.status_id ?? null,
         estimated_delivery_date: selectedOrder.estimated_delivery_date
-          ? new Date(selectedOrder.estimated_delivery_date)
-              .toISOString()
-              .split("T")[0]
+          ? ((): string => {
+              const d = new Date(selectedOrder.estimated_delivery_date);
+              const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+              return local.toLocaleDateString('en-CA');
+            })()
           : "",
         delivery_type: selectedOrder.delivery_type || "shipping",
         client_name: selectedOrder.client_name || "",
@@ -291,11 +295,13 @@ export const CreateOrderForm: React.FC<{
       const originalData = {
         description: selectedOrder.description || "",
         amount_charged: selectedOrder.amount_charged || 0,
-        status: selectedOrder.status || "confirmed",
+        status_id: selectedOrder.status_id ?? null,
         estimated_delivery_date: selectedOrder.estimated_delivery_date
-          ? new Date(selectedOrder.estimated_delivery_date)
-              .toISOString()
-              .split("T")[0]
+          ? ((): string => {
+              const d = new Date(selectedOrder.estimated_delivery_date);
+              const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+              return local.toLocaleDateString('en-CA');
+            })()
           : "",
         delivery_type: selectedOrder.delivery_type || "shipping",
         client_name: selectedOrder.client_name || "",
@@ -322,15 +328,6 @@ export const CreateOrderForm: React.FC<{
   const summaryDescription = selectedOrder
     ? "Actualiza los detalles del encargo y revisa el estado antes de guardar."
     : "Completa la información esencial del encargo. Puedes afinar detalles después.";
-  const deliveryTypeLabel = deliveryTypeLabels[formData.delivery_type];
-  const statusLabel = getStatusLabel(formData.status);
-  const estimatedDeliveryLabel = formData.estimated_delivery_date
-    ? new Date(formData.estimated_delivery_date).toLocaleDateString()
-    : "Sin fecha definida";
-  const customerLabel =
-    formData.client_name.trim() || formData.client_phone.trim() || "Sin asignar";
-  const totalPaid = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const statusColor = getStatusColor(formData.status);
   
   // Calculate payment status in real-time
   const paymentStatus = calculatePaymentStatus(
@@ -496,30 +493,20 @@ export const CreateOrderForm: React.FC<{
                             )}
                           </div>
 
-                          {selectedOrder && (
-                            <div>
-                              <label
-                                htmlFor="status"
-                                className="mb-1.5 block text-sm font-medium text-primary"
-                              >
-                                Estado del pedido
-                              </label>
-                              <select
-                                id="status"
-                                name="status"
-                                value={formData.status}
-                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as OrderStatus }))}
-                                className="input-base"
-                              >
-                                <option value="confirmed">Confirmado</option>
-                                <option value="in_progress">En progreso</option>
-                                <option value="ready">Listo</option>
-                                <option value="shipped">Enviado</option>
-                                <option value="delivered">Entregado</option>
-                                <option value="cancelled">Cancelado</option>
-                              </select>
-                            </div>
-                          )}
+                          <div>
+                            <label
+                              htmlFor="status_id"
+                              className="mb-1.5 block text-sm font-medium text-primary"
+                            >
+                              Estado del pedido
+                            </label>
+                            <StatusPicker
+                              value={formData.status_id}
+                              onChange={(id) =>
+                                setFormData((prev) => ({ ...prev, status_id: id }))
+                              }
+                            />
+                          </div>
                         </div>
 
                         <div>
@@ -674,7 +661,7 @@ export const CreateOrderForm: React.FC<{
                       Cancelar
                     </button>
 
-                    {selectedOrder && (
+                    {selectedOrder && !selectedOrder.status?.is_final_status && (
                       <button
                         type="button"
                         className="btn-base btn-danger justify-center rounded-xl"

@@ -1,16 +1,20 @@
 export type DeliveryType = "pickup" | "shipping" | "delivery";
-export type OrderStatus = 
-  | "confirmed" 
-  | "in_progress" 
-  | "ready" 
-  | "shipped" 
-  | "delivered" 
-  | "cancelled";
+
+export interface OrderStatusOption {
+  id: number;
+  name: string;
+  display_name: string;
+  color: string;
+  order_position: number;
+  is_system_status: boolean;
+  is_final_status: boolean;
+  is_active: boolean;
+}
 
 export interface OrderFormData {
   description: string;
   amount_charged: number;
-  status: OrderStatus;
+  status_id: number | null;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;
   client_name: string;
@@ -23,7 +27,8 @@ export interface Order {
   description: string;
   entry_date: string;
   amount_charged: number;
-  status: OrderStatus;
+  status_id: number;
+  status?: OrderStatusOption;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;
   client_name: string;
@@ -44,7 +49,7 @@ export interface PaymentStatus {
 export interface OrderFilters {
   dateFrom: string | null;  // ISO date string (yyyy-MM-dd) or null
   dateTo: string | null;    // ISO date string (yyyy-MM-dd) or null
-  statuses: OrderStatus[];  // Array of selected statuses, empty = show all
+  status_ids: number[];     // Array of selected status IDs, empty = show all
 }
 
 // Interface for temporary incomes (before saving to backend)
