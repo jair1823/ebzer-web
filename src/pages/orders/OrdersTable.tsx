@@ -2,15 +2,28 @@ import React from "react";
 import { ConfirmModal, StatusBadge } from "../../components";
 import { useConfirmModal } from "../../hooks";
 import type { FinishOrderResponse, Order, PaymentStatus } from "./types";
-import { formatOrderId, getPaymentBadgeClasses, getPaymentBadgeText, formatIsoDateStringToLocale } from "../../utils";
+import {
+  formatIsoDateStringToLocale,
+  formatOrderId,
+  getPaymentBadgeClasses,
+  getPaymentBadgeText,
+} from "../../utils";
 
 export const OrdersTable: React.FC<{
   orders: Order[];
   loading: boolean;
   onClickRow: (orderId: number) => void;
+  onCreateAgendaNote: (order: Order) => void;
   finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
   paymentStatuses: Map<number, PaymentStatus>;
-}> = ({ orders, loading, onClickRow, finishOrder, paymentStatuses }) => {
+}> = ({
+  orders,
+  loading,
+  onClickRow,
+  onCreateAgendaNote,
+  finishOrder,
+  paymentStatuses,
+}) => {
   const { isOpen, config, openConfirm, closeConfirm } = useConfirmModal();
 
   const handleFinishClick = (orderId: number) => {
@@ -128,18 +141,29 @@ export const OrdersTable: React.FC<{
                     ? formatIsoDateStringToLocale(order.estimated_delivery_date)
                       : "-"}
                   </td>
-                  <td className="text-sm">
-                    {order.paid_at === null && (
+                  <td className="px-6 py-3 text-sm">
+                    <div className="flex items-center justify-end gap-2">
                       <button
-                        className="btn-base btn-accent rounded-md px-3 py-1 text-xs whitespace-nowrap"
+                        className="btn-base btn-outline rounded-md px-3 py-1 text-xs whitespace-nowrap"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.stopPropagation();
-                          handleFinishClick(order.id);
+                          onCreateAgendaNote(order);
                         }}
                       >
-                        Finalizar y registrar pago
+                        Nota
                       </button>
-                    )}
+                      {order.paid_at === null && (
+                        <button
+                          className="btn-base btn-accent rounded-md px-3 py-1 text-xs whitespace-nowrap"
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.stopPropagation();
+                            handleFinishClick(order.id);
+                          }}
+                        >
+                          Finalizar y registrar pago
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

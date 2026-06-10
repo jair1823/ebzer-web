@@ -1,17 +1,37 @@
 import React from "react";
+import { Toast } from "../../components";
+import { useOrders, useToast } from "../../hooks";
+import { AgendaItemForm } from "../agenda/AgendaItemForm";
 import { OrdersHeader } from "./OrdersHeader";
 import { OrdersTable } from "./OrdersTable";
+import type { AgendaCreatePayload, AgendaItemFormData } from "../agenda/types";
 import type { Order, OrderFilters } from "./types";
 
-import { useOrders } from "../../hooks";
-import { isoDateStringToLocalDate, sortOrdersForTable } from "../../utils";
-import { incomesService } from "../../services";
+import {
+  formatOrderId,
+  isoDateStringToLocalDate,
+  sortOrdersForTable,
+} from "../../utils";
+import { agendaService, incomesService } from "../../services";
 
 const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
 
 const getMonthLabel = (date: Date): string => {
   const month = new Intl.DateTimeFormat("es-CR", { month: "long" }).format(date);
   return `${month.charAt(0).toUpperCase()}${month.slice(1)}`;
+};
+
+const getAgendaNoteTitle = (order: Order): string => {
+  const baseTitle = `Nota para pedido ${formatOrderId(order.id)}`;
+  const clientName = order.client_name?.trim();
+
+  return clientName ? `${baseTitle} - ${clientName}` : baseTitle;
+};
+
+const getAgendaNoteContent = (order: Order): string => {
+  const description = order.description.trim();
+
+  return description ? `Pedido: ${description}` : "";
 };
 
 export const OrdersPage: React.FC = () => {
@@ -27,11 +47,21 @@ export const OrdersPage: React.FC = () => {
     getAllOrders,
   } = useOrders();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isAgendaNoteOpen, setIsAgendaNoteOpen] = React.useState(false);
+  const [selectedAgendaNoteOrder, setSelectedAgendaNoteOrder] =
+    React.useState<Order | null>(null);
   const [filters, setFilters] = React.useState<OrderFilters>({
     dateFrom: null,
     dateTo: null,
     status_ids: [],
   });
+  const {
+    isVisible: isToastVisible,
+    config: toastConfig,
+    hideToast,
+    showSuccess,
+    showError,
+  } = useToast();
   const monthRange = React.useMemo(() => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -84,6 +114,43 @@ export const OrdersPage: React.FC = () => {
   const handleClickRow = (orderId: number) => {
     setSelectedOrder(orders.find((order) => order.id === orderId) || null);
     toggleModal();
+  };
+
+  const handleOpenAgendaNote = (order: Order) => {
+    setSelectedAgendaNoteOrder(order);
+    setIsAgendaNoteOpen(true);
+  };
+
+  const handleCloseAgendaNote = () => {
+    setIsAgendaNoteOpen(false);
+    setSelectedAgendaNoteOrder(null);
+  };
+
+  const agendaNoteInitialValues = React.useMemo<
+    Partial<AgendaItemFormData> | undefined
+  >(() => {
+    if (!selectedAgendaNoteOrder) return undefined;
+
+    return {
+      type: "note",
+      title: getAgendaNoteTitle(selectedAgendaNoteOrder),
+      content: getAgendaNoteContent(selectedAgendaNoteOrder),
+      due_date: "",
+      priority: "medium",
+      order_id: String(selectedAgendaNoteOrder.id),
+    };
+  }, [selectedAgendaNoteOrder]);
+
+  const handleCreateAgendaNote = async (data: AgendaCreatePayload) => {
+    try {
+      await agendaService.create(data);
+      showSuccess("Nota creada");
+      handleCloseAgendaNote();
+    } catch (error) {
+      console.error("Error creating agenda note:", error);
+      showError("Error al crear la nota");
+      throw error;
+    }
   };
 
   const applyFilters = (orders: Order[]): Order[] => {
@@ -168,9 +235,19 @@ export const OrdersPage: React.FC = () => {
         orders={sortedOrders}
         loading={loading}
         onClickRow={handleClickRow}
+        onCreateAgendaNote={handleOpenAgendaNote}
         finishOrder={finishOrderAndRefreshSummary}
         paymentStatuses={paymentStatuses}
       />
+      <AgendaItemForm
+        isOpen={isAgendaNoteOpen}
+        selectedItem={null}
+        initialCreateValues={agendaNoteInitialValues}
+        orders={orders}
+        onClose={handleCloseAgendaNote}
+        onSubmit={handleCreateAgendaNote}
+      />
+      <Toast isVisible={isToastVisible} onClose={hideToast} {...toastConfig} />
     </div>
   );
 };
