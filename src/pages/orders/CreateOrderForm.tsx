@@ -49,6 +49,7 @@ export const CreateOrderForm: React.FC<{
   isOpen: boolean;
   selectedOrder?: Order;
   createOrder: (data: OrderFormData) => Promise<{ id: number }>;
+  getAllOrders: () => Promise<Order[] | undefined>;
   updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateOrder: () => void;
@@ -59,6 +60,7 @@ export const CreateOrderForm: React.FC<{
   isOpen = false,
   selectedOrder,
   createOrder,
+  getAllOrders,
   updateOrder,
   toggleModal,
   openCreateOrder,
@@ -72,6 +74,7 @@ export const CreateOrderForm: React.FC<{
   const [newIncomeDate, setNewIncomeDate] = useState<string>(
     getTodayLocalDate()
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original state for change detection
   const [originalFormData, setOriginalFormData] = useState<OrderFormData>(initialFormData);
@@ -217,6 +220,11 @@ export const CreateOrderForm: React.FC<{
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       // Prepare data with all required fields for backend
       const dataToSend = {
@@ -265,6 +273,8 @@ export const CreateOrderForm: React.FC<{
         showSuccess(`${newIncomes.length} pago(s) registrado(s)`);
       }
 
+      await getAllOrders();
+
       // Reset form and close modal
       setFormData(initialFormData);
       setIncomes([]);
@@ -280,6 +290,8 @@ export const CreateOrderForm: React.FC<{
           ? "Error al actualizar el pedido"
           : "Error al crear el pedido"
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -738,9 +750,17 @@ export const CreateOrderForm: React.FC<{
                     <button
                       type="submit"
                       className="btn-base btn-ternary justify-center rounded-xl px-5 py-2.5"
-                      disabled={!isFormValid || (selectedOrder && !hasChanges)}
+                      disabled={
+                        isSubmitting ||
+                        !isFormValid ||
+                        Boolean(selectedOrder && !hasChanges)
+                      }
                     >
-                      {selectedOrder ? "Guardar cambios" : "Crear pedido"}
+                      {isSubmitting
+                        ? "Guardando..."
+                        : selectedOrder
+                        ? "Guardar cambios"
+                        : "Crear pedido"}
                     </button>
                   </div>
                 </div>

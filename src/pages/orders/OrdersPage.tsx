@@ -16,6 +16,7 @@ export const OrdersPage: React.FC = () => {
     updateOrder,
     finishOrder,
     paymentStatuses,
+    getAllOrders,
   } = useOrders();
   const [isOpen, setIsOpen] = React.useState(false);
   const [filters, setFilters] = React.useState<OrderFilters>({
@@ -70,6 +71,7 @@ export const OrdersPage: React.FC = () => {
         filters={filters}
         setFilters={setFilters}
         createOrder={createOrder}
+        getAllOrders={getAllOrders}
         updateOrder={updateOrder}
         isOpen={isOpen}
         openCreateOrder={handleOpenCreateOrder}

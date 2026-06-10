@@ -29,6 +29,7 @@ export interface Order {
   amount_charged: number;
   status_id: number;
   status?: OrderStatusOption;
+  payment_status?: PaymentStatus;
   paid_at: string | null;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;

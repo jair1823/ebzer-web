@@ -10,12 +10,13 @@ export const OrdersHeader: React.FC<{
   isOpen: boolean;
   selectedOrder?: Order | null;
   createOrder: (data: OrderFormData) => Promise<{ id: number }>;
+  getAllOrders: () => Promise<Order[] | undefined>;
   updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateOrder: () => void;
   finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
   selectedOrderPaymentStatus?: PaymentStatus | null;
-}> = ({ filters, setFilters, createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder, selectedOrderPaymentStatus }) => {
+}> = ({ filters, setFilters, createOrder, getAllOrders, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder, selectedOrderPaymentStatus }) => {
   
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -217,6 +218,7 @@ export const OrdersHeader: React.FC<{
         isOpen={isOpen}
         selectedOrder={selectedOrder || undefined}
         createOrder={createOrder}
+        getAllOrders={getAllOrders}
         toggleModal={toggleModal}
         openCreateOrder={openCreateOrder}
         updateOrder={updateOrder}
