@@ -11,7 +11,7 @@ const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA")
 
 const getMonthLabel = (date: Date): string => {
   const month = new Intl.DateTimeFormat("es-CR", { month: "long" }).format(date);
-  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getFullYear()}`;
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)}`;
 };
 
 export const OrdersPage: React.FC = () => {
