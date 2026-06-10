@@ -79,6 +79,10 @@
     background-color: rgb(var(--danger));
   }
 
+  .bg-danger-soft {
+    background-color: rgb(var(--danger-soft));
+  }
+
   .bg-muted {
     background-color: rgb(var(--muted));
   }
@@ -325,4 +329,3 @@
     @apply disabled:cursor-not-allowed disabled:bg-slate-200/50 disabled:text-slate-500 disabled:opacity-70;
   }
 }
-

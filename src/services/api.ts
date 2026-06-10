@@ -45,6 +45,17 @@ export const api = {
       });
       return handleResponse<TResponse>(response);
     },
+    patch: async <TResponse = unknown, TBody = unknown>(
+      endpoint: string,
+      data: TBody
+    ): Promise<TResponse> => {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse<TResponse>(response);
+    },
     delete: async <TResponse = unknown>(endpoint: string): Promise<TResponse> => {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "DELETE",
