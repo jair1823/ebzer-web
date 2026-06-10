@@ -48,6 +48,14 @@ export interface PaymentStatus {
   is_fully_paid: boolean;
 }
 
+export interface OrdersSummary {
+  monthlyIncome: number;
+  activeOrders: number;
+  pendingCollection: number;
+  pendingPercentage: number;
+  monthLabel: string;
+}
+
 export interface FinishOrderResponse {
   finished: boolean;
   income_created: boolean;
