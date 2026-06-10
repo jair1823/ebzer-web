@@ -1,3 +1,6 @@
+import type { Order } from "../pages/orders/types";
+import { isoDateStringToLocalDate } from "./date";
+
 /**
  * Fomat a number ID to a 5-digit format with leading zeros
  * @param id - The numeric ID to format
@@ -28,4 +31,40 @@ export const formatCurrency = (amount: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+};
+
+const isPaidCompletedOrder = (order: Order): boolean => {
+  return order.paid_at !== null && order.status?.name === "completed";
+};
+
+const getEstimatedDeliveryTimestamp = (order: Order): number | null => {
+  const date = isoDateStringToLocalDate(order.estimated_delivery_date);
+  return date ? date.getTime() : null;
+};
+
+export const sortOrdersForTable = (orders: Order[]): Order[] => {
+  return [...orders].sort((a, b) => {
+    const aIsPaidCompleted = isPaidCompletedOrder(a);
+    const bIsPaidCompleted = isPaidCompletedOrder(b);
+
+    if (aIsPaidCompleted !== bIsPaidCompleted) {
+      return aIsPaidCompleted ? 1 : -1;
+    }
+
+    const aDeliveryDate = getEstimatedDeliveryTimestamp(a);
+    const bDeliveryDate = getEstimatedDeliveryTimestamp(b);
+
+    if (
+      aDeliveryDate !== null &&
+      bDeliveryDate !== null &&
+      aDeliveryDate !== bDeliveryDate
+    ) {
+      return bDeliveryDate - aDeliveryDate;
+    }
+
+    if (aDeliveryDate === null && bDeliveryDate !== null) return 1;
+    if (aDeliveryDate !== null && bDeliveryDate === null) return -1;
+
+    return b.id - a.id;
+  });
 };

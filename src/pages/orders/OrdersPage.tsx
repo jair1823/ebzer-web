@@ -4,7 +4,7 @@ import { OrdersTable } from "./OrdersTable";
 import type { Order, OrderFilters } from "./types";
 
 import { useOrders } from "../../hooks";
-import { isoDateStringToLocalDate } from "../../utils";
+import { isoDateStringToLocalDate, sortOrdersForTable } from "../../utils";
 import { incomesService } from "../../services";
 
 const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
@@ -111,6 +111,7 @@ export const OrdersPage: React.FC = () => {
   };
 
   const filteredOrders = applyFilters(orders);
+  const sortedOrders = sortOrdersForTable(filteredOrders);
   const ordersSummary = React.useMemo(() => {
     const activeOrders = orders.filter(
       (order) => order.status && !order.status.is_final_status
@@ -164,7 +165,7 @@ export const OrdersPage: React.FC = () => {
         }
       />
       <OrdersTable
-        orders={filteredOrders}
+        orders={sortedOrders}
         loading={loading}
         onClickRow={handleClickRow}
         finishOrder={finishOrderAndRefreshSummary}
