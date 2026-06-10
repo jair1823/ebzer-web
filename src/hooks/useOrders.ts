@@ -68,16 +68,17 @@ export const useOrders = () => {
     }
   };
 
-  const updateOrder = async (orderId: number, orderData: any) => {
+  const updateOrder = async (orderId: number, orderData: OrderFormData) => {
     const response = await ordersService.updateOrder(orderId.toString(), orderData);
-    await getAllOrders();
-    setSelectedOrder(orders.find((order) => order.id === orderId) || null);
+    const refreshedOrders = await getAllOrders();
+    setSelectedOrder(refreshedOrders?.find((order) => order.id === orderId) || null);
     return response;
   };
 
   const finishOrder = async (orderId: number) => {
     const response = await ordersService.finishOrder(orderId.toString());
-    await getAllOrders();
+    const refreshedOrders = await getAllOrders();
+    setSelectedOrder(refreshedOrders?.find((order) => order.id === orderId) || null);
     return response;
   };
 

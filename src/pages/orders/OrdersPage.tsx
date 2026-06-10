@@ -76,6 +76,9 @@ export const OrdersPage: React.FC = () => {
         toggleModal={toggleModal}
         selectedOrder={selectedOrder}
         finishOrder={finishOrder}
+        selectedOrderPaymentStatus={
+          selectedOrder ? paymentStatuses.get(selectedOrder.id) ?? null : null
+        }
       />
       <OrdersTable
         orders={filteredOrders}

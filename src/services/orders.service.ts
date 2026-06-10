@@ -1,24 +1,32 @@
 import { api } from "./api";
-import type { PaymentStatus } from "../pages/orders/types";
+import type {
+  FinishOrderResponse,
+  Order,
+  OrderFormData,
+  PaymentStatus,
+} from "../pages/orders/types";
 
 export const ordersService = {
-  createOrder: async (orderData: any) => {
-    return api.post("/orders", orderData);
+  createOrder: async (orderData: OrderFormData): Promise<{ id: number }> => {
+    return api.post<{ id: number }, OrderFormData>("/orders", orderData);
   },
-  getAllOrders: async () => {
-    return api.get("/orders");
+  getAllOrders: async (): Promise<Order[]> => {
+    return api.get<Order[]>("/orders");
   },
-  getOrderById: async (orderId: string) => {
-    return api.get(`/orders/${orderId}`);
+  getOrderById: async (orderId: string): Promise<Order> => {
+    return api.get<Order>(`/orders/${orderId}`);
   },
   getPaymentStatus: async (orderId: string): Promise<PaymentStatus> => {
-    return api.get(`/orders/${orderId}/payment-status`);
+    return api.get<PaymentStatus>(`/orders/${orderId}/payment-status`);
   },
-  updateOrder: async (orderId: string, orderData: any) => {
-    return api.put(`/orders/${orderId}`, orderData);
+  updateOrder: async (orderId: string, orderData: OrderFormData): Promise<Order> => {
+    return api.put<Order, OrderFormData>(`/orders/${orderId}`, orderData);
   },
-  finishOrder: async (orderId: string) => {
-    return api.post(`/orders/${orderId}/finish`, {});
+  finishOrder: async (orderId: string): Promise<FinishOrderResponse> => {
+    return api.post<FinishOrderResponse, Record<string, never>>(
+      `/orders/${orderId}/finish`,
+      {}
+    );
   },
   deleteOrder: async (orderId: string) => {
     return api.delete(`/orders/${orderId}`);

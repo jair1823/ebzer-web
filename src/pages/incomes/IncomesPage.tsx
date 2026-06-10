@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useIncomes } from "../../hooks";
 import { IncomesHeader } from "./IncomesHeader";
 import { IncomesTable } from "./IncomesTable";
+import type { Income } from "./types";
 
 export const IncomesPage: React.FC = () => {
   const { 
@@ -27,7 +28,7 @@ export const IncomesPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSelectIncome = (income: any) => {
+  const handleSelectIncome = (income: Income) => {
     setSelectedIncome(income);
     setIsModalOpen(true);
   };

@@ -9,6 +9,9 @@ import type {
   DeliveryType,
   Order,
   TemporaryIncome,
+  OrderStatusOption,
+  FinishOrderResponse,
+  PaymentStatus,
 } from "./types";
 import type { Income } from "../incomes/types";
 import { ConfirmModal, Toast, StatusPicker } from "../../components";
@@ -45,11 +48,12 @@ const initialFormData: OrderFormData = {
 export const CreateOrderForm: React.FC<{
   isOpen: boolean;
   selectedOrder?: Order;
-  createOrder: (data: OrderFormData) => Promise<{ id: number } | unknown>;
-  updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
+  createOrder: (data: OrderFormData) => Promise<{ id: number }>;
+  updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateOrder: () => void;
-  finishOrder: (orderId: number) => void;
+  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
+  selectedOrderPaymentStatus?: PaymentStatus | null;
   showTrigger?: boolean;
 }> = ({
   isOpen = false,
@@ -59,6 +63,7 @@ export const CreateOrderForm: React.FC<{
   toggleModal,
   openCreateOrder,
   finishOrder,
+  selectedOrderPaymentStatus = null,
   showTrigger = true,
 }) => {
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
@@ -88,7 +93,11 @@ export const CreateOrderForm: React.FC<{
 
   const validateForm = (): boolean => {
     // description and client_name are required
-    return formData.description.trim() !== "" && formData.client_name.trim() !== "";
+    return (
+      formData.description.trim() !== "" &&
+      formData.client_name.trim() !== "" &&
+      (selectedOrder !== undefined || formData.status_id !== null)
+    );
   };
 
   // Check if form has unsaved changes
@@ -183,20 +192,24 @@ export const CreateOrderForm: React.FC<{
 
   const handleFinishClick = (orderId: number) => {
     openConfirm({
-      title: "Finalizar pedido",
+      title: "Finalizar y registrar pago",
       message:
-        "¿Estás seguro de que deseas finalizar este pedido? Esta acción no se puede deshacer.",
-      confirmText: "Finalizar",
+        "Esto puede crear un ingreso por el saldo pendiente, cambiar el pedido a completado y marcarlo como pagado.",
+      confirmText: "Finalizar y registrar pago",
       cancelText: "Cancelar",
       variant: "info",
       onConfirm: async () => {
         try {
-          await finishOrder(orderId);
-          showSuccess("Pedido finalizado exitosamente");
+          const result = await finishOrder(orderId);
+          showSuccess(
+            result.income_created
+              ? `Pago registrado por ${formatCurrency(result.amount_paid)}`
+              : "Pedido marcado como pagado"
+          );
           toggleModal();
         } catch (error) {
           console.error("Error finishing order:", error);
-          showError("Error al finalizar el pedido");
+          showError("Error al finalizar y registrar el pago");
         }
       },
     });
@@ -229,7 +242,7 @@ export const CreateOrderForm: React.FC<{
       } else {
         // CREATE: Create order and get ID
         const response = await createOrder(dataToSend);
-        orderId = (response as unknown as { id: number }).id;
+        orderId = response.id;
         showSuccess("Pedido creado exitosamente");
       }
 
@@ -271,6 +284,7 @@ export const CreateOrderForm: React.FC<{
   };
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (selectedOrder) {
       setFormData({
         description: selectedOrder.description || "",
@@ -318,6 +332,7 @@ export const CreateOrderForm: React.FC<{
       setOriginalFormData(initialFormData);
       setOriginalIncomes([]);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedOrder, isOpen]);
 
   const isFormValid = validateForm();
@@ -328,12 +343,55 @@ export const CreateOrderForm: React.FC<{
   const summaryDescription = selectedOrder
     ? "Actualiza los detalles del encargo y revisa el estado antes de guardar."
     : "Completa la información esencial del encargo. Puedes afinar detalles después.";
-  
-  // Calculate payment status in real-time
-  const paymentStatus = calculatePaymentStatus(
-    formData.amount_charged,
-    incomes.map(inc => ({ amount: inc.amount }))
+  const newOrderStatusFilter = React.useCallback(
+    (status: OrderStatusOption) => status.name === "new",
+    []
   );
+  const handleStatusChange = React.useCallback(
+    (id: number) => {
+      setFormData((prev) => ({ ...prev, status_id: id }));
+
+      if (!selectedOrder) {
+        setOriginalFormData((prev) => ({ ...prev, status_id: id }));
+      }
+    },
+    [selectedOrder]
+  );
+  
+  // Calculate payment status in real-time.
+  const paymentStatus = React.useMemo(() => {
+    const newIncomeTotal = incomes
+      .filter((income) => !income.isExisting)
+      .reduce((sum, income) => sum + income.amount, 0);
+
+    if (selectedOrder && selectedOrderPaymentStatus) {
+      const totalPaid = selectedOrderPaymentStatus.total_paid + newIncomeTotal;
+      const remaining = Math.max(0, formData.amount_charged - totalPaid);
+      const percentagePaid =
+        formData.amount_charged > 0
+          ? (totalPaid / formData.amount_charged) * 100
+          : 0;
+
+      return {
+        ...selectedOrderPaymentStatus,
+        total_paid: totalPaid,
+        amount_charged: formData.amount_charged,
+        remaining,
+        percentage_paid: percentagePaid,
+        is_fully_paid: remaining === 0 && totalPaid > 0,
+      };
+    }
+
+    return calculatePaymentStatus(
+      formData.amount_charged,
+      incomes.map((income) => ({ amount: income.amount }))
+    );
+  }, [
+    formData.amount_charged,
+    incomes,
+    selectedOrder,
+    selectedOrderPaymentStatus,
+  ]);
 
   return (
     <div className="relative">
@@ -502,9 +560,12 @@ export const CreateOrderForm: React.FC<{
                             </label>
                             <StatusPicker
                               value={formData.status_id}
-                              onChange={(id) =>
-                                setFormData((prev) => ({ ...prev, status_id: id }))
+                              onChange={handleStatusChange}
+                              disabled={!selectedOrder}
+                              statusFilter={
+                                selectedOrder ? undefined : newOrderStatusFilter
                               }
+                              autoSelectFirstOption={!selectedOrder}
                             />
                           </div>
                         </div>
@@ -661,7 +722,7 @@ export const CreateOrderForm: React.FC<{
                       Cancelar
                     </button>
 
-                    {selectedOrder && !selectedOrder.status?.is_final_status && (
+                    {selectedOrder && selectedOrder.paid_at === null && (
                       <button
                         type="button"
                         className="btn-base btn-danger justify-center rounded-xl"
@@ -670,7 +731,7 @@ export const CreateOrderForm: React.FC<{
                           handleFinishClick(selectedOrder.id);
                         }}
                       >
-                        Finalizar pedido
+                        Finalizar y registrar pago
                       </button>
                     )}
 

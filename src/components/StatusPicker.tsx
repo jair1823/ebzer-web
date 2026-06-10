@@ -6,12 +6,16 @@ interface StatusPickerProps {
   value: number | null;
   onChange: (id: number) => void;
   disabled?: boolean;
+  statusFilter?: (status: OrderStatusOption) => boolean;
+  autoSelectFirstOption?: boolean;
 }
 
 export const StatusPicker: React.FC<StatusPickerProps> = ({
   value,
   onChange,
   disabled = false,
+  statusFilter,
+  autoSelectFirstOption = false,
 }) => {
   const [statuses, setStatuses] = React.useState<OrderStatusOption[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -24,6 +28,19 @@ export const StatusPicker: React.FC<StatusPickerProps> = ({
       .finally(() => setLoading(false));
   }, []);
 
+  const visibleStatuses = React.useMemo(
+    () => statuses.filter(statusFilter ?? (() => true)),
+    [statuses, statusFilter]
+  );
+
+  React.useEffect(() => {
+    if (!autoSelectFirstOption || loading || value !== null || visibleStatuses.length === 0) {
+      return;
+    }
+
+    onChange(visibleStatuses[0].id);
+  }, [autoSelectFirstOption, loading, onChange, value, visibleStatuses]);
+
   return (
     <div className="relative">
       <select
@@ -33,22 +50,15 @@ export const StatusPicker: React.FC<StatusPickerProps> = ({
         className="input-base appearance-none pr-8"
       >
         {loading && <option value="">Cargando...</option>}
-        {statuses.map((s) => (
+        {!loading && visibleStatuses.length === 0 && (
+          <option value="">Sin estados disponibles</option>
+        )}
+        {visibleStatuses.map((s) => (
           <option key={s.id} value={s.id}>
             {s.display_name}
           </option>
         ))}
       </select>
-      {/* Color dot overlay showing selected status color */}
-      {!loading && value !== null && (
-        <span
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full"
-          style={{
-            backgroundColor:
-              statuses.find((s) => s.id === value)?.color ?? "#6B7280",
-          }}
-        />
-      )}
     </div>
   );
 };

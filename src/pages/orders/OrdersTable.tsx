@@ -1,28 +1,28 @@
 import React from "react";
 import { ConfirmModal, StatusBadge } from "../../components";
 import { useConfirmModal } from "../../hooks";
-import type { Order, PaymentStatus } from "./types";
+import type { FinishOrderResponse, Order, PaymentStatus } from "./types";
 import { formatOrderId, getPaymentBadgeClasses, getPaymentBadgeText, formatIsoDateStringToLocale } from "../../utils";
 
 export const OrdersTable: React.FC<{
   orders: Order[];
   loading: boolean;
   onClickRow: (orderId: number) => void;
-  finishOrder: (orderId: number) => void;
+  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
   paymentStatuses: Map<number, PaymentStatus>;
 }> = ({ orders, loading, onClickRow, finishOrder, paymentStatuses }) => {
   const { isOpen, config, openConfirm, closeConfirm } = useConfirmModal();
 
   const handleFinishClick = (orderId: number) => {
     openConfirm({
-      title: "Finalizar pedido",
+      title: "Finalizar y registrar pago",
       message:
-        "¿Estás seguro de que deseas finalizar este pedido? Esta acción no se puede deshacer.",
-      confirmText: "Finalizar",
+        "Esto puede crear un ingreso por el saldo pendiente, cambiar el pedido a completado y marcarlo como pagado.",
+      confirmText: "Finalizar y registrar pago",
       cancelText: "Cancelar",
       variant: "info",
       onConfirm: async () => {
-        finishOrder(orderId);
+        await finishOrder(orderId);
       },
     });
   };
@@ -129,15 +129,15 @@ export const OrdersTable: React.FC<{
                       : "-"}
                   </td>
                   <td className="text-sm">
-                    {!order.status?.is_final_status && (
+                    {order.paid_at === null && (
                       <button
-                        className="btn-base btn-accent rounded-md px-3 py-1 text-xs"
+                        className="btn-base btn-accent rounded-md px-3 py-1 text-xs whitespace-nowrap"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.stopPropagation();
                           handleFinishClick(order.id);
                         }}
                       >
-                        Finalizar
+                        Finalizar y registrar pago
                       </button>
                     )}
                   </td>

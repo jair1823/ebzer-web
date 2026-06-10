@@ -22,34 +22,55 @@ export interface ReorderItem {
   position: number;
 }
 
+type OrderStatusesResponse =
+  | OrderStatusOption[]
+  | { statuses: OrderStatusOption[] };
+
+const normalizeStatusesResponse = (
+  response: OrderStatusesResponse
+): OrderStatusOption[] => {
+  return Array.isArray(response) ? response : response.statuses;
+};
+
 export const orderStatusesService = {
   getAll: async (): Promise<OrderStatusOption[]> => {
-    const response = await api.get("/order-statuses");
-    return response.statuses ?? response;
+    const response = await api.get<OrderStatusesResponse>("/order-statuses");
+    return normalizeStatusesResponse(response);
   },
 
   getActive: async (): Promise<OrderStatusOption[]> => {
-    const response = await api.get("/order-statuses?active_only=true");
-    return response.statuses ?? response;
+    const response = await api.get<OrderStatusesResponse>(
+      "/order-statuses?active_only=true"
+    );
+    return normalizeStatusesResponse(response);
   },
 
   getById: async (id: number): Promise<OrderStatusOption> => {
-    return api.get(`/order-statuses/${id}`);
+    return api.get<OrderStatusOption>(`/order-statuses/${id}`);
   },
 
   create: async (data: CreateOrderStatusData): Promise<OrderStatusOption> => {
-    return api.post("/order-statuses", data);
+    return api.post<OrderStatusOption, CreateOrderStatusData>(
+      "/order-statuses",
+      data
+    );
   },
 
   update: async (id: number, data: UpdateOrderStatusData): Promise<OrderStatusOption> => {
-    return api.put(`/order-statuses/${id}`, data);
+    return api.put<OrderStatusOption, UpdateOrderStatusData>(
+      `/order-statuses/${id}`,
+      data
+    );
   },
 
   deactivate: async (id: number): Promise<void> => {
-    return api.delete(`/order-statuses/${id}`);
+    return api.delete<void>(`/order-statuses/${id}`);
   },
 
   reorder: async (statusOrders: ReorderItem[]): Promise<void> => {
-    return api.put("/order-statuses/reorder", { status_orders: statusOrders });
+    return api.put<void, { status_orders: ReorderItem[] }>(
+      "/order-statuses/reorder",
+      { status_orders: statusOrders }
+    );
   },
 };

@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from "react";
 
+const getInitialTheme = (): "light" | "dark" => {
+  const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  return savedTheme || (prefersDark ? "dark" : "light");
+};
+
 /**
  * ThemeToggle - Componente de desarrollo para cambio rápido de tema
  * Solo visible en modo desarrollo
  * Persiste preferencia en localStorage
  */
 export const ThemeToggle: React.FC = () => {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(getInitialTheme);
 
-  // Cargar tema del localStorage al montar
+  // Sincronizar tema con el DOM y localStorage.
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
-
-    setTheme(initialTheme);
-    document.documentElement.setAttribute("data-theme", initialTheme);
-    setMounted(true);
-  }, []);
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   // Toggle entre light y dark
   const toggleTheme = () => {
@@ -27,9 +28,6 @@ export const ThemeToggle: React.FC = () => {
     document.documentElement.setAttribute("data-theme", newTheme);
     localStorage.setItem("theme", newTheme);
   };
-
-  // No renderizar hasta que esté montado (evita flash)
-  if (!mounted) return null;
 
   // Solo mostrar en desarrollo
   if (import.meta.env.MODE !== "development") return null;

@@ -24,8 +24,8 @@ const formatAmountPreview = (value: number) =>
 export const CreateIncomeForm: React.FC<{
   isOpen: boolean;
   selectedIncome?: Income | null;
-  createIncome: (data: IncomeFormData) => Promise<void>;
-  updateIncome: (incomeId: number, data: IncomeFormData) => Promise<void>;
+  createIncome: (data: IncomeFormData) => Promise<unknown>;
+  updateIncome: (incomeId: number, data: IncomeFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateIncome: () => void;
 }> = ({
@@ -87,6 +87,7 @@ export const CreateIncomeForm: React.FC<{
   };
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (selectedIncome) {
       setFormData({
         order_id: selectedIncome.order_id,
@@ -98,6 +99,7 @@ export const CreateIncomeForm: React.FC<{
     } else {
       setFormData(initialFormData);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedIncome, isOpen]);
 
   const isFormValid = validateForm();

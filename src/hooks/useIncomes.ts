@@ -26,10 +26,10 @@ export const useIncomes = () => {
     }
   }, []);
 
-  const updateIncome = async (incomeId: number, incomeData: any) => {
+  const updateIncome = async (incomeId: number, incomeData: IncomeFormData) => {
     const response = await incomesService.updateIncome(incomeId.toString(), incomeData);
-    await getAllIncomes();
-    setSelectedIncome(incomes.find((income) => income.id === incomeId) || null);
+    const refreshedIncomes = await getAllIncomes();
+    setSelectedIncome(refreshedIncomes?.find((income) => income.id === incomeId) || null);
     return response;
   };
 

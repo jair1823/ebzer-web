@@ -5,8 +5,8 @@ import type { Income, IncomeFormData } from "./types";
 export const IncomesHeader: React.FC<{
   isOpen: boolean;
   selectedIncome?: Income | null;
-  createIncome: (data: IncomeFormData) => Promise<void>;
-  updateIncome: (incomeId: number, data: IncomeFormData) => Promise<void>;
+  createIncome: (data: IncomeFormData) => Promise<unknown>;
+  updateIncome: (incomeId: number, data: IncomeFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateIncome: () => void;
 }> = ({ 

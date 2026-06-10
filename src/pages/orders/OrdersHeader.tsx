@@ -1,6 +1,6 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
-import type { Order, OrderFormData, OrderFilters } from "./types";
+import type { FinishOrderResponse, Order, OrderFormData, OrderFilters, PaymentStatus } from "./types";
 import { StatusMultiSelect } from "../../components";
 import styles from "./OrdersHeader.module.css";
 
@@ -9,12 +9,13 @@ export const OrdersHeader: React.FC<{
   setFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
   isOpen: boolean;
   selectedOrder?: Order | null;
-  createOrder: (data: OrderFormData) => Promise<void>;
-  updateOrder: (orderId: number, data: OrderFormData) => Promise<void>;
+  createOrder: (data: OrderFormData) => Promise<{ id: number }>;
+  updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
   toggleModal: () => void;
   openCreateOrder: () => void;
-  finishOrder: (orderId: number) => void;
-}> = ({ filters, setFilters, createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder }) => {
+  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
+  selectedOrderPaymentStatus?: PaymentStatus | null;
+}> = ({ filters, setFilters, createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder, selectedOrderPaymentStatus }) => {
   
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -220,6 +221,7 @@ export const OrdersHeader: React.FC<{
         openCreateOrder={openCreateOrder}
         updateOrder={updateOrder}
         finishOrder={finishOrder}
+        selectedOrderPaymentStatus={selectedOrderPaymentStatus}
         showTrigger={false}
       />
     </div>

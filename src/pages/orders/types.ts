@@ -29,6 +29,7 @@ export interface Order {
   amount_charged: number;
   status_id: number;
   status?: OrderStatusOption;
+  paid_at: string | null;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;
   client_name: string;
@@ -44,6 +45,17 @@ export interface PaymentStatus {
   remaining: number;
   percentage_paid: number;
   is_fully_paid: boolean;
+}
+
+export interface FinishOrderResponse {
+  finished: boolean;
+  income_created: boolean;
+  income_id: number | null;
+  amount_paid: number;
+  total_paid: number;
+  remaining: number;
+  is_fully_paid: boolean;
+  paid_at: string;
 }
 
 export interface OrderFilters {
