@@ -1,10 +1,19 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
-import type { FinishOrderResponse, Order, OrderFormData, OrderFilters, PaymentStatus } from "./types";
+import type {
+  FinishOrderResponse,
+  Order,
+  OrderFormData,
+  OrderFilters,
+  OrdersSummary,
+  PaymentStatus,
+} from "./types";
 import { StatusMultiSelect } from "../../components";
+import { formatCurrency } from "../../utils";
 import styles from "./OrdersHeader.module.css";
 
 export const OrdersHeader: React.FC<{
+  summary: OrdersSummary;
   filters: OrderFilters;
   setFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
   isOpen: boolean;
@@ -16,10 +25,40 @@ export const OrdersHeader: React.FC<{
   openCreateOrder: () => void;
   finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
   selectedOrderPaymentStatus?: PaymentStatus | null;
-}> = ({ filters, setFilters, createOrder, getAllOrders, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder, selectedOrderPaymentStatus }) => {
+}> = ({
+  summary,
+  filters,
+  setFilters,
+  createOrder,
+  getAllOrders,
+  updateOrder,
+  isOpen,
+  toggleModal,
+  selectedOrder,
+  openCreateOrder,
+  finishOrder,
+  selectedOrderPaymentStatus,
+}) => {
   
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
+  const summaryCards = [
+    {
+      label: "Ingresos del mes",
+      value: formatCurrency(summary.monthlyIncome),
+      detail: summary.monthLabel,
+    },
+    {
+      label: "Pedidos activos",
+      value: String(summary.activeOrders),
+      detail: "En proceso",
+    },
+    {
+      label: "Pendiente por cobrar",
+      value: formatCurrency(summary.pendingCollection),
+      detail: `${Math.round(summary.pendingPercentage)}% del total`,
+    },
+  ];
 
   const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters((prev) => ({
@@ -73,16 +112,29 @@ export const OrdersHeader: React.FC<{
 
   return (
     <div className={`mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8 ${styles.header}`}>
-      {/* Inline Header - Una sola línea */}
-      <div className="flex items-center justify-between gap-4">
-        
-        {/* Título compacto */}
+      <div className="space-y-4">
         <h1 className={`text-xl font-semibold text-primary whitespace-nowrap ${styles.title}`}>
           Pedidos
         </h1>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          {summaryCards.map((card) => (
+            <section
+              key={card.label}
+              className="surface-card rounded-lg px-4 py-3 min-h-[104px] flex flex-col justify-between"
+              aria-label={card.label}
+            >
+              <p className="text-xs font-medium text-secondary">{card.label}</p>
+              <p className="mt-2 text-2xl font-semibold text-primary tabular-nums break-words">
+                {card.value}
+              </p>
+              <p className="mt-2 text-xs text-secondary">{card.detail}</p>
+            </section>
+          ))}
+        </div>
+
         {/* Botones de acción inline */}
-        <div className={`flex items-center gap-2 ${styles.actionGroup}`}>
+        <div className={`flex items-center justify-end gap-2 ${styles.actionGroup}`}>
           
           {/* Botón Filtros con dropdown */}
           <div className="relative" ref={filterRef}>
@@ -210,7 +262,6 @@ export const OrdersHeader: React.FC<{
             Nuevo
           </button>
         </div>
-
       </div>
 
       {/* Modal */}
