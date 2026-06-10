@@ -6,13 +6,22 @@ const authHeaders = (): HeadersInit => ({
   ...(API_KEY ? { "X-API-Key": API_KEY } : {}),
 });
 
+const handleResponse = async <TResponse>(response: Response): Promise<TResponse> => {
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const message = (errorBody as { message?: string }).message ?? response.statusText;
+    throw new Error(`HTTP ${response.status}: ${message}`);
+  }
+  return response.json();
+};
+
 export const api = {
     get: async <TResponse = unknown>(endpoint: string): Promise<TResponse> => {
-      const response = await fetch(`${API_BASE_URL}${endpoint}` , {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "GET",
         headers: authHeaders(),
       });
-      return response.json();
+      return handleResponse<TResponse>(response);
     },
     post: async <TResponse = unknown, TBody = unknown>(
       endpoint: string,
@@ -23,7 +32,7 @@ export const api = {
         headers: authHeaders(),
         body: JSON.stringify(data),
       });
-      return response.json();
+      return handleResponse<TResponse>(response);
     },
     put: async <TResponse = unknown, TBody = unknown>(
       endpoint: string,
@@ -34,13 +43,13 @@ export const api = {
         headers: authHeaders(),
         body: JSON.stringify(data),
       });
-      return response.json();
+      return handleResponse<TResponse>(response);
     },
     delete: async <TResponse = unknown>(endpoint: string): Promise<TResponse> => {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "DELETE",
         headers: authHeaders(),
       });
-      return response.json();
+      return handleResponse<TResponse>(response);
     },
  };
