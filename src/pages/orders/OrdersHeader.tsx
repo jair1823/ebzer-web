@@ -11,6 +11,7 @@ import type {
 import { StatusMultiSelect } from "../../components";
 import { formatCurrency } from "../../utils";
 import styles from "./OrdersHeader.module.css";
+import { canWrite, useAuth } from "../../auth";
 
 export const OrdersHeader: React.FC<{
   summary: OrdersSummary;
@@ -39,7 +40,8 @@ export const OrdersHeader: React.FC<{
   finishOrder,
   selectedOrderPaymentStatus,
 }) => {
-  
+  const { user } = useAuth();
+  const writeAllowed = user ? canWrite(user.role) : false;
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
   const summaryItems = [
@@ -226,6 +228,7 @@ export const OrdersHeader: React.FC<{
           )}
 
           {/* Botón Nuevo - compacto */}
+          {writeAllowed && (
           <button
             type="button"
             className={`btn-base btn-secondary rounded-md text-xs px-3 py-1.5 ${styles.primaryButton}`}
@@ -246,6 +249,7 @@ export const OrdersHeader: React.FC<{
             </svg>
             Nuevo
           </button>
+          )}
         </div>
       </div>
 

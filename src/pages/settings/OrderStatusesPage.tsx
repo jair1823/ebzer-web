@@ -7,8 +7,11 @@ import { ConfirmModal } from "../../components";
 import { useConfirmModal } from "../../hooks";
 import { Toast } from "../../components";
 import { useToast } from "../../hooks";
+import { canManageOrderStatuses, useAuth } from "../../auth";
 
 export const OrderStatusesPage: React.FC = () => {
+  const { user } = useAuth();
+  const canManage = user ? canManageOrderStatuses(user.role) : false;
   const [statuses, setStatuses] = React.useState<OrderStatusOption[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [showInactive, setShowInactive] = React.useState(false);
@@ -77,18 +80,20 @@ export const OrderStatusesPage: React.FC = () => {
             Gestiona los estados disponibles para clasificar tus pedidos.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="btn-base btn-secondary rounded-md text-sm px-4 py-2"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
-            <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-              <path d="M12 19V5" /><path d="M19 12H5" />
-            </g>
-          </svg>
-          Agregar estado
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="btn-base btn-secondary rounded-md text-sm px-4 py-2"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
+              <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
+                <path d="M12 19V5" /><path d="M19 12H5" />
+              </g>
+            </svg>
+            Agregar estado
+          </button>
+        )}
       </div>
 
       {/* Show inactive toggle */}
@@ -152,34 +157,35 @@ export const OrderStatusesPage: React.FC = () => {
                   #{status.order_position}
                 </span>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    type="button"
-                    title="Editar"
-                    disabled={status.is_system_status}
-                    onClick={() => openEditModal(status)}
-                    className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    title="Desactivar"
-                    disabled={status.is_system_status || !status.is_active}
-                    onClick={() => handleDeactivate(status)}
-                    className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                      <path d="M10 11v6M14 11v6" />
-                    </svg>
-                  </button>
-                </div>
+                {canManage && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      title="Editar"
+                      disabled={status.is_system_status}
+                      onClick={() => openEditModal(status)}
+                      className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      title="Desactivar"
+                      disabled={status.is_system_status || !status.is_active}
+                      onClick={() => handleDeactivate(status)}
+                      className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -187,15 +193,17 @@ export const OrderStatusesPage: React.FC = () => {
       </div>
 
       {/* Add/Edit modal */}
-      <StatusFormModal
-        isOpen={isModalOpen}
-        editingStatus={editingStatus}
-        onClose={() => setIsModalOpen(false)}
-        onSaved={async () => {
-          showSuccess(editingStatus ? "Estado actualizado" : "Estado creado");
-          await loadStatuses();
-        }}
-      />
+      {canManage && (
+        <StatusFormModal
+          isOpen={isModalOpen}
+          editingStatus={editingStatus}
+          onClose={() => setIsModalOpen(false)}
+          onSaved={async () => {
+            showSuccess(editingStatus ? "Estado actualizado" : "Estado creado");
+            await loadStatuses();
+          }}
+        />
+      )}
 
       {/* Confirm modal */}
       {confirmConfig && (

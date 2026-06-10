@@ -3,8 +3,11 @@ import { useIncomes } from "../../hooks";
 import { IncomesHeader } from "./IncomesHeader";
 import { IncomesTable } from "./IncomesTable";
 import type { Income } from "./types";
+import { canWriteBusinessRecords, useAuth } from "../../auth";
 
 export const IncomesPage: React.FC = () => {
+  const { user } = useAuth();
+  const writeAllowed = user ? canWriteBusinessRecords(user.role) : false;
   const { 
     incomes, 
     loading, 
@@ -43,12 +46,14 @@ export const IncomesPage: React.FC = () => {
           updateIncome={updateIncome}
           toggleModal={toggleModal}
           openCreateIncome={openCreateIncome}
+          canWrite={writeAllowed}
         />
 
         <IncomesTable
           incomes={incomes}
           loading={loading}
           onSelectIncome={handleSelectIncome}
+          canWrite={writeAllowed}
         />
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   getPaymentBadgeClasses,
   getPaymentBadgeText,
 } from "../../utils";
+import { canWrite, useAuth } from "../../auth";
 
 export const OrdersTable: React.FC<{
   orders: Order[];
@@ -24,6 +25,8 @@ export const OrdersTable: React.FC<{
   finishOrder,
   paymentStatuses,
 }) => {
+  const { user } = useAuth();
+  const writeAllowed = user ? canWrite(user.role) : false;
   const { isOpen, config, openConfirm, closeConfirm } = useConfirmModal();
 
   const handleFinishClick = (orderId: number) => {
@@ -96,8 +99,8 @@ export const OrdersTable: React.FC<{
               {orders.map((order) => (
                 <tr
                   key={order.id}
-                  className="table-row-interactive"
-                  onClick={() => onClickRow(order.id)}
+                  className={writeAllowed ? "table-row-interactive" : ""}
+                  onClick={writeAllowed ? () => onClickRow(order.id) : undefined}
                 >
                   <td className="px-6 py-3 text-sm text-left">
                     <span className="font-mono text-sm text-primary">{formatOrderId(order.id)}</span>
@@ -143,6 +146,7 @@ export const OrdersTable: React.FC<{
                   </td>
                   <td className="px-6 py-3 text-sm">
                     <div className="flex items-center justify-end gap-2">
+                      {writeAllowed && (
                       <button
                         className="btn-base btn-outline rounded-md px-3 py-1 text-xs whitespace-nowrap"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -152,7 +156,8 @@ export const OrdersTable: React.FC<{
                       >
                         Nota
                       </button>
-                      {order.paid_at === null && (
+                      )}
+                      {writeAllowed && order.paid_at === null && (
                         <button
                           className="btn-base btn-accent rounded-md px-3 py-1 text-xs whitespace-nowrap"
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
