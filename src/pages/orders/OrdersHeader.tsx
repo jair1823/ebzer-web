@@ -42,22 +42,10 @@ export const OrdersHeader: React.FC<{
   
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
-  const summaryCards = [
-    {
-      label: "Ingresos del mes",
-      value: formatCurrency(summary.monthlyIncome),
-      detail: summary.monthLabel,
-    },
-    {
-      label: "Pedidos activos",
-      value: String(summary.activeOrders),
-      detail: "En proceso",
-    },
-    {
-      label: "Pendiente por cobrar",
-      value: formatCurrency(summary.pendingCollection),
-      detail: `${Math.round(summary.pendingPercentage)}% del total`,
-    },
+  const summaryItems = [
+    `Ingresos mes(${summary.monthLabel}): ${formatCurrency(summary.monthlyIncome)}`,
+    `Pendiente por cobrar: ${formatCurrency(summary.pendingCollection)}`,
+    `Pedidos Pendientes: ${summary.activeOrders}`,
   ];
 
   const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,19 +105,16 @@ export const OrdersHeader: React.FC<{
           Pedidos
         </h1>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          {summaryCards.map((card) => (
-            <section
-              key={card.label}
-              className="surface-card rounded-lg px-4 py-3 min-h-[104px] flex flex-col justify-between"
-              aria-label={card.label}
-            >
-              <p className="text-xs font-medium text-secondary">{card.label}</p>
-              <p className="mt-2 text-2xl font-semibold text-primary tabular-nums break-words">
-                {card.value}
-              </p>
-              <p className="mt-2 text-xs text-secondary">{card.detail}</p>
-            </section>
+        <div className={styles.summaryLine} aria-label="Resumen de pedidos">
+          {summaryItems.map((item, index) => (
+            <React.Fragment key={item}>
+              {index > 0 && (
+                <span className={styles.summarySeparator} aria-hidden="true">
+                  |
+                </span>
+              )}
+              <span>{item}</span>
+            </React.Fragment>
           ))}
         </div>
 
