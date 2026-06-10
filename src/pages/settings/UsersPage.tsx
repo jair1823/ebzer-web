@@ -12,6 +12,7 @@ const roleLabels: Record<Role, string> = {
 
 const initialCreateForm: CreateUserPayload = {
   name: "",
+  username: "",
   email: "",
   password: "",
   role: "operator",
@@ -68,6 +69,7 @@ export const UsersPage: React.FC = () => {
     setEditingUser(user);
     setEditForm({
       name: user.name,
+      username: user.username,
       email: user.email,
       role: user.role,
       is_active: user.is_active,
@@ -101,6 +103,7 @@ export const UsersPage: React.FC = () => {
 
     const payload: UpdateUserPayload = {
       name: editForm.name,
+      username: editForm.username,
       email: editForm.email,
       role: editForm.role,
       is_active: editForm.is_active,
@@ -156,13 +159,23 @@ export const UsersPage: React.FC = () => {
         <div className="mb-4">
           <h2 className="text-base font-semibold text-primary">Nuevo usuario</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_10rem_auto] md:items-end">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_10rem_auto] lg:items-end">
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-primary">Nombre</span>
             <input
               className="input-base"
               value={createForm.name}
               onChange={(event) => setCreateForm((form) => ({ ...form, name: event.target.value }))}
+              required
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-primary">Usuario</span>
+            <input
+              className="input-base"
+              value={createForm.username}
+              onChange={(event) => setCreateForm((form) => ({ ...form, username: event.target.value }))}
+              autoComplete="username"
               required
             />
           </label>
@@ -233,6 +246,7 @@ export const UsersPage: React.FC = () => {
                   <tr key={user.id}>
                     <td className="px-5 py-4">
                       <div className="text-sm font-medium text-primary">{user.name}</div>
+                      <div className="text-xs text-secondary">@{user.username}</div>
                       <div className="text-xs text-secondary">{user.email}</div>
                     </td>
                     <td className="px-5 py-4 text-sm text-primary">{roleLabels[user.role]}</td>
@@ -275,7 +289,7 @@ export const UsersPage: React.FC = () => {
           <form onSubmit={handleUpdate} className="w-full max-w-lg overflow-hidden rounded-lg border border-subtle bg-surface shadow-2xl">
             <div className="border-b border-subtle px-6 py-4">
               <h2 className="text-base font-semibold text-primary">Editar usuario</h2>
-              <p className="mt-1 text-sm text-secondary">{editingUser.email}</p>
+              <p className="mt-1 text-sm text-secondary">@{editingUser.username}</p>
             </div>
             <div className="grid gap-4 px-6 py-5">
               <label className="block">
@@ -284,6 +298,16 @@ export const UsersPage: React.FC = () => {
                   className="input-base"
                   value={editForm.name ?? ""}
                   onChange={(event) => setEditForm((form) => ({ ...form, name: event.target.value }))}
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-primary">Usuario</span>
+                <input
+                  className="input-base"
+                  value={editForm.username ?? ""}
+                  onChange={(event) => setEditForm((form) => ({ ...form, username: event.target.value }))}
+                  autoComplete="username"
                   required
                 />
               </label>

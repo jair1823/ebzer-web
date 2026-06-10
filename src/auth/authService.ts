@@ -16,11 +16,11 @@ const parseError = async (response: Response): Promise<string> => {
 };
 
 export const authService = {
-  async login(email: string, password: string): Promise<LoginResponse> {
+  async login(username: string, password: string): Promise<LoginResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...apiKeyHeader() },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     if (!response.ok) {

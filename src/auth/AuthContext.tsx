@@ -30,8 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const response = await authService.login(email, password);
+  const login = useCallback(async (username: string, password: string) => {
+    const response = await authService.login(username, password);
     setUser(response.user);
   }, []);
 

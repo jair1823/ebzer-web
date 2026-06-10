@@ -6,7 +6,7 @@ export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(username, password);
       navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión");
@@ -53,19 +53,19 @@ export const LoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary mb-1">
-                Correo electrónico
+              <label htmlFor="username" className="block text-sm font-medium text-primary mb-1">
+                Usuario
               </label>
               <input
-                id="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                type="text"
+                autoComplete="username"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={submitting}
                 className="block w-full rounded-md border border-default bg-surface px-3 py-2 text-sm text-primary placeholder-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
-                placeholder="admin@example.com"
+                placeholder="admin"
               />
             </div>
 
@@ -88,7 +88,7 @@ export const LoginPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={submitting || !email || !password}
+              disabled={submitting || !username || !password}
               className="btn-base btn-primary w-full rounded-md py-2 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? "Ingresando..." : "Iniciar sesión"}

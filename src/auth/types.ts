@@ -3,13 +3,14 @@ export type Role = "admin" | "operator" | "guest";
 export interface AuthUser {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: Role;
   is_active: boolean;
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -30,6 +31,7 @@ export interface RefreshResponse {
 export interface User {
   id: number;
   name: string;
+  username: string;
   email: string;
   role: Role;
   is_active: boolean;
@@ -39,6 +41,7 @@ export interface User {
 
 export interface CreateUserPayload {
   name: string;
+  username: string;
   email: string;
   password: string;
   role: Role;
@@ -46,6 +49,7 @@ export interface CreateUserPayload {
 
 export interface UpdateUserPayload {
   name?: string;
+  username?: string;
   email?: string;
   password?: string;
   role?: Role;
