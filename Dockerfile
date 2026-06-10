@@ -2,7 +2,7 @@ FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 
-ARG VITE_API_BASE_URL=http://localhost:3000/api
+ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 COPY package*.json ./
@@ -10,6 +10,7 @@ RUN npm ci
 
 COPY . .
 
+RUN test -n "$VITE_API_BASE_URL" || (echo "VITE_API_BASE_URL must be set for production builds" && exit 1)
 RUN npm run build
 
 FROM nginx:1.27-alpine
