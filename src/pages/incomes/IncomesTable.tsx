@@ -23,7 +23,8 @@ export const IncomesTable: React.FC<{
   incomes: Income[];
   loading: boolean;
   onSelectIncome: (income: Income) => void;
-}> = ({ incomes, loading, onSelectIncome }) => {
+  canWrite: boolean;
+}> = ({ incomes, loading, onSelectIncome, canWrite }) => {
   if (loading) {
     return (
       <div className="overflow-hidden rounded-xl shadow-sm surface-card">
@@ -88,8 +89,8 @@ export const IncomesTable: React.FC<{
             {incomes.map((income) => (
               <tr
                 key={income.id}
-                className="transition-colors hover:bg-surface-hover cursor-pointer"
-                onClick={() => onSelectIncome(income)}
+                className={canWrite ? "transition-colors hover:bg-surface-hover cursor-pointer" : ""}
+                onClick={canWrite ? () => onSelectIncome(income) : undefined}
               >
                 <td className="whitespace-nowrap px-6 py-4">
                   <span className="text-sm font-medium text-primary">
@@ -112,15 +113,17 @@ export const IncomesTable: React.FC<{
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectIncome(income);
-                    }}
-                    className="text-brand-primary hover:text-brand-primary-hover font-medium"
-                  >
-                    Ver detalles
-                  </button>
+                  {canWrite && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectIncome(income);
+                      }}
+                      className="text-brand-primary hover:text-brand-primary-hover font-medium"
+                    >
+                      Ver detalles
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

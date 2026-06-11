@@ -6,6 +6,7 @@ import type {
   AgendaSummary,
 } from "./types";
 import { defaultAgendaFilters } from "../../hooks";
+import { canWrite, useAuth } from "../../auth";
 
 interface AgendaHeaderProps {
   summary: AgendaSummary;
@@ -22,6 +23,8 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
   orders,
   openCreateItem,
 }) => {
+  const { user } = useAuth();
+  const writeAllowed = user ? canWrite(user.role) : false;
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
 
@@ -138,6 +141,7 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
             </button>
           )}
 
+          {writeAllowed && (
           <button
             type="button"
             className="btn-base btn-secondary rounded-md text-xs px-3 py-1.5"
@@ -158,6 +162,7 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
             </svg>
             Nuevo
           </button>
+          )}
         </div>
       </div>
     </div>

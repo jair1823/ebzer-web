@@ -5,6 +5,7 @@ import {
   formatOrderId,
   isoDateStringToLocalDate,
 } from "../../utils";
+import { canWrite, useAuth } from "../../auth";
 
 const typeLabels: Record<AgendaItemType, string> = {
   note: "Nota",
@@ -55,6 +56,8 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
   onArchive,
   onDelete,
 }) => {
+  const { user } = useAuth();
+  const writeAllowed = user ? canWrite(user.role) : false;
   const showComplete = item.status === "pending";
   const showArchive = item.status !== "archived";
 
@@ -119,7 +122,7 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-1 sm:justify-end">
-          {showComplete && (
+          {writeAllowed && showComplete && (
             <button
               type="button"
               className="btn-base btn-accent rounded-md px-3 py-1 text-xs"
@@ -128,7 +131,7 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
               Completar
             </button>
           )}
-          {showArchive && (
+          {writeAllowed && showArchive && (
             <button
               type="button"
               className="btn-base btn-outline rounded-md px-3 py-1 text-xs"
@@ -137,6 +140,7 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
               Archivar
             </button>
           )}
+          {writeAllowed && (
           <button
             type="button"
             className="btn-base btn-outline rounded-md px-3 py-1 text-xs"
@@ -144,6 +148,8 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
           >
             Editar
           </button>
+          )}
+          {writeAllowed && (
           <button
             type="button"
             className="btn-base btn-outline rounded-md px-3 py-1 text-xs text-danger"
@@ -151,6 +157,7 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
           >
             Eliminar
           </button>
+          )}
         </div>
       </div>
     </article>

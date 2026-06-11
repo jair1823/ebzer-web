@@ -2,4 +2,4 @@
 export * from "./orders";
 export * from "./agenda";
 export { ExpensesPage } from "./expenses/ExpensesPage";
-export { OrderStatusesPage } from "./settings";
+export { OrderStatusesPage, UsersPage } from "./settings";
