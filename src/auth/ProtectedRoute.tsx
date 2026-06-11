@@ -21,6 +21,6 @@ export const RequireRole: React.FC<{ role: Role }> = ({ role }) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) return <FullPageSpinner />;
-  if (!user || user.role !== role) return <Navigate to="/" replace />;
+  if (!user || user.role !== role) return <Navigate to="/orders" replace />;
   return <Outlet />;
 };

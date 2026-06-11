@@ -12,7 +12,7 @@ export const LoginPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   if (!isLoading && isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/orders" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,7 +21,7 @@ export const LoginPage: React.FC = () => {
     setSubmitting(true);
     try {
       await login(username, password);
-      navigate("/", { replace: true });
+      navigate("/orders", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     } finally {

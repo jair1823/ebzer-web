@@ -4,19 +4,19 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import type {
   OrderFormData,
   DeliveryType,
   Order,
   TemporaryIncome,
   OrderStatusOption,
-  FinishOrderResponse,
   PaymentStatus,
 } from "./types";
 import type { Income } from "../incomes/types";
 import { ConfirmModal, Toast, StatusPicker } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
-import { incomesService } from "../../services";
+import { incomesService, ordersService } from "../../services";
 import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
 import { OrderPaymentsSection } from "./OrderPaymentsSection";
 
@@ -32,7 +32,7 @@ const getLocalDatePlusDays = (days: number): string => {
   return local.toLocaleDateString('en-CA');
 };
 
-const initialFormData: OrderFormData = {
+const createInitialFormData = (): OrderFormData => ({
   description: "",
   amount_charged: 0,
   status_id: null,
@@ -42,38 +42,41 @@ const initialFormData: OrderFormData = {
   client_name: "",
   client_phone: "",
   notes: "",
-};
+});
 
+const initialFormData: OrderFormData = createInitialFormData();
 
-export const CreateOrderForm: React.FC<{
-  isOpen: boolean;
-  selectedOrder?: Order;
-  createOrder: (data: OrderFormData) => Promise<{ id: number }>;
-  getAllOrders: () => Promise<Order[] | undefined>;
-  updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
-  toggleModal: () => void;
-  openCreateOrder: () => void;
-  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
-  selectedOrderPaymentStatus?: PaymentStatus | null;
-  showTrigger?: boolean;
-}> = ({
-  isOpen = false,
-  selectedOrder,
-  createOrder,
-  getAllOrders,
-  updateOrder,
-  toggleModal,
-  openCreateOrder,
-  finishOrder,
-  selectedOrderPaymentStatus = null,
-  showTrigger = true,
-}) => {
+const orderToFormData = (order: Order): OrderFormData => ({
+  description: order.description || "",
+  amount_charged: order.amount_charged || 0,
+  status_id: order.status_id ?? null,
+  estimated_delivery_date: order.estimated_delivery_date
+    ? (() => {
+        const d = new Date(order.estimated_delivery_date);
+        const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        return local.toLocaleDateString("en-CA");
+      })()
+    : "",
+  delivery_type: order.delivery_type || "shipping",
+  client_name: order.client_name || "",
+  client_phone: order.client_phone || "",
+  notes: order.notes || "",
+});
+
+export const CreateOrderForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderPaymentStatus, setSelectedOrderPaymentStatus] =
+    useState<PaymentStatus | null>(null);
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
   const [incomes, setIncomes] = useState<TemporaryIncome[]>([]);
   const [newIncomeAmount, setNewIncomeAmount] = useState<number>(0);
   const [newIncomeDate, setNewIncomeDate] = useState<string>(
     getTodayLocalDate()
   );
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Track original state for change detection
@@ -99,7 +102,7 @@ export const CreateOrderForm: React.FC<{
     return (
       formData.description.trim() !== "" &&
       formData.client_name.trim() !== "" &&
-      (selectedOrder !== undefined || formData.status_id !== null)
+      (selectedOrder !== null || formData.status_id !== null)
     );
   };
 
@@ -117,7 +120,7 @@ export const CreateOrderForm: React.FC<{
   };
 
   // Load existing incomes when editing an order
-  const loadIncomes = async (orderId: number) => {
+  const loadIncomes = async (orderId: number): Promise<TemporaryIncome[]> => {
     try {
       const allIncomes = await incomesService.getAllIncomes();
       const orderIncomes = allIncomes.filter((income: Income) => income.order_id === orderId);
@@ -130,10 +133,10 @@ export const CreateOrderForm: React.FC<{
         backendId: income.id,
       }));
       
-      setIncomes(loadedIncomes);
-      setOriginalIncomes(loadedIncomes);
+      return loadedIncomes;
     } catch (error) {
       console.error("Error loading incomes:", error);
+      return [];
     }
   };
 
@@ -166,11 +169,11 @@ export const CreateOrderForm: React.FC<{
         cancelText: "Continuar editando",
         variant: "warning",
         onConfirm: () => {
-          toggleModal();
+          navigate("/orders");
         },
       });
     } else {
-      toggleModal();
+      navigate("/orders");
     }
   };
 
@@ -203,13 +206,13 @@ export const CreateOrderForm: React.FC<{
       variant: "info",
       onConfirm: async () => {
         try {
-          const result = await finishOrder(orderId);
+          const result = await ordersService.finishOrder(orderId.toString());
           showSuccess(
             result.income_created
               ? `Pago registrado por ${formatCurrency(result.amount_paid)}`
               : "Pedido marcado como pagado"
           );
-          toggleModal();
+          navigate("/orders");
         } catch (error) {
           console.error("Error finishing order:", error);
           showError("Error al finalizar y registrar el pago");
@@ -244,12 +247,12 @@ export const CreateOrderForm: React.FC<{
 
       if (selectedOrder) {
         // EDIT: Update order
-        await updateOrder(selectedOrder.id, dataToSend);
+        await ordersService.updateOrder(selectedOrder.id.toString(), dataToSend);
         orderId = selectedOrder.id;
         showSuccess("Pedido actualizado exitosamente");
       } else {
         // CREATE: Create order and get ID
-        const response = await createOrder(dataToSend);
+        const response = await ordersService.createOrder(dataToSend);
         orderId = response.id;
         showSuccess("Pedido creado exitosamente");
       }
@@ -273,16 +276,15 @@ export const CreateOrderForm: React.FC<{
         showSuccess(`${newIncomes.length} pago(s) registrado(s)`);
       }
 
-      await getAllOrders();
-
-      // Reset form and close modal
-      setFormData(initialFormData);
+      // Reset form and return to the list after incomes are saved.
+      const freshInitialData = createInitialFormData();
+      setFormData(freshInitialData);
       setIncomes([]);
       setNewIncomeAmount(0);
       setNewIncomeDate(getTodayLocalDate());
-      setOriginalFormData(initialFormData);
+      setOriginalFormData(freshInitialData);
       setOriginalIncomes([]);
-      toggleModal();
+      navigate("/orders");
     } catch (error) {
       console.error("Error submitting form:", error);
       showError(
@@ -297,55 +299,70 @@ export const CreateOrderForm: React.FC<{
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
-    if (selectedOrder) {
-      setFormData({
-        description: selectedOrder.description || "",
-        amount_charged: selectedOrder.amount_charged || 0,
-        status_id: selectedOrder.status_id ?? null,
-        estimated_delivery_date: selectedOrder.estimated_delivery_date
-          ? ((): string => {
-              const d = new Date(selectedOrder.estimated_delivery_date);
-              const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-              return local.toLocaleDateString('en-CA');
-            })()
-          : "",
-        delivery_type: selectedOrder.delivery_type || "shipping",
-        client_name: selectedOrder.client_name || "",
-        client_phone: selectedOrder.client_phone || "",
-        notes: selectedOrder.notes || "",
-      });
-      // Load existing incomes when editing
-      loadIncomes(selectedOrder.id);
-      
-      // Set original state for change detection
-      const originalData = {
-        description: selectedOrder.description || "",
-        amount_charged: selectedOrder.amount_charged || 0,
-        status_id: selectedOrder.status_id ?? null,
-        estimated_delivery_date: selectedOrder.estimated_delivery_date
-          ? ((): string => {
-              const d = new Date(selectedOrder.estimated_delivery_date);
-              const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-              return local.toLocaleDateString('en-CA');
-            })()
-          : "",
-        delivery_type: selectedOrder.delivery_type || "shipping",
-        client_name: selectedOrder.client_name || "",
-        client_phone: selectedOrder.client_phone || "",
-        notes: selectedOrder.notes || "",
-      };
-      setOriginalFormData(originalData);
-    } else {
-      setFormData(initialFormData);
-      // Reset incomes when creating new order
+    let isCancelled = false;
+
+    const resetCreateState = () => {
+      const freshInitialData = createInitialFormData();
+      setSelectedOrder(null);
+      setSelectedOrderPaymentStatus(null);
+      setFormData(freshInitialData);
       setIncomes([]);
       setNewIncomeAmount(0);
       setNewIncomeDate(getTodayLocalDate());
-      setOriginalFormData(initialFormData);
+      setOriginalFormData(freshInitialData);
       setOriginalIncomes([]);
+      setLoadError(null);
+      setIsLoadingOrder(false);
+    };
+
+    if (!id) {
+      resetCreateState();
+      return;
     }
+
+    const parsedOrderId = Number(id);
+    if (!Number.isInteger(parsedOrderId) || parsedOrderId <= 0) {
+      resetCreateState();
+      setLoadError("Pedido inválido");
+      return;
+    }
+
+    const loadOrder = async () => {
+      setIsLoadingOrder(true);
+      setLoadError(null);
+
+      try {
+        const order = await ordersService.getOrderById(id);
+        const loadedIncomes = await loadIncomes(order.id);
+
+        if (isCancelled) return;
+
+        const loadedFormData = orderToFormData(order);
+        setSelectedOrder(order);
+        setSelectedOrderPaymentStatus(order.payment_status ?? null);
+        setFormData(loadedFormData);
+        setOriginalFormData(loadedFormData);
+        setIncomes(loadedIncomes);
+        setOriginalIncomes(loadedIncomes);
+      } catch (error) {
+        console.error("Error loading order:", error);
+        if (!isCancelled) {
+          setLoadError("No se pudo cargar el pedido");
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingOrder(false);
+        }
+      }
+    };
+
+    loadOrder();
+
+    return () => {
+      isCancelled = true;
+    };
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [selectedOrder, isOpen]);
+  }, [id]);
 
   const isFormValid = validateForm();
   const hasChanges = hasUnsavedChanges();
@@ -405,33 +422,39 @@ export const CreateOrderForm: React.FC<{
     selectedOrderPaymentStatus,
   ]);
 
-  return (
-    <div className="relative">
-      {showTrigger && (
-        <button
-          type="button"
-          className="btn-base btn-secondary focus-primary rounded-md shadow-md"
-          onClick={openCreateOrder}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            className="mr-1"
+  if (isLoadingOrder) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-default bg-surface px-6 py-10 text-center text-sm text-secondary shadow-sm">
+          Cargando pedido...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-default bg-surface px-6 py-10 text-center shadow-sm">
+          <p className="text-sm font-medium text-primary">{loadError}</p>
+          <button
+            type="button"
+            className="btn-base btn-outline mt-4 rounded-md px-4 py-2 text-sm"
+            onClick={() => navigate("/orders")}
           >
-            <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-              <path d="M12 19V5" />
-              <path d="M19 12H5" />
-            </g>
-          </svg>
-          Nuevo pedido
-        </button>
-      )}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 backdrop-blur-sm" style={{backgroundColor: 'rgb(var(--background) / 0.8)'}}>
-          <div className="absolute inset-y-0 right-0 w-full max-w-6xl overflow-hidden bg-surface shadow-2xl">
-            <form onSubmit={handleSubmit} className="flex h-full flex-col">
+            Volver a pedidos
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <form
+        onSubmit={handleSubmit}
+        className="flex min-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-xl border border-default bg-surface shadow-sm"
+      >
               <div className="border-b px-6 py-5 backdrop-blur sm:px-8 bg-surface border-default">
                 <div className="flex items-start justify-between gap-6">
                   <div className="max-w-2xl">
@@ -765,10 +788,7 @@ export const CreateOrderForm: React.FC<{
                   </div>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+      </form>
       {/* Confirmation Modal */}
       {config && (
         <ConfirmModal

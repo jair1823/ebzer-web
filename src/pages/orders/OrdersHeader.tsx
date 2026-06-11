@@ -1,13 +1,6 @@
 import React from "react";
-import { CreateOrderForm } from "./CreateOrderForm";
-import type {
-  FinishOrderResponse,
-  Order,
-  OrderFormData,
-  OrderFilters,
-  OrdersSummary,
-  PaymentStatus,
-} from "./types";
+import { useNavigate } from "react-router-dom";
+import type { OrderFilters, OrdersSummary } from "./types";
 import { StatusMultiSelect } from "../../components";
 import { formatCurrency } from "../../utils";
 import styles from "./OrdersHeader.module.css";
@@ -17,30 +10,13 @@ export const OrdersHeader: React.FC<{
   summary: OrdersSummary;
   filters: OrderFilters;
   setFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
-  isOpen: boolean;
-  selectedOrder?: Order | null;
-  createOrder: (data: OrderFormData) => Promise<{ id: number }>;
-  getAllOrders: () => Promise<Order[] | undefined>;
-  updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
-  toggleModal: () => void;
-  openCreateOrder: () => void;
-  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
-  selectedOrderPaymentStatus?: PaymentStatus | null;
 }> = ({
   summary,
   filters,
   setFilters,
-  createOrder,
-  getAllOrders,
-  updateOrder,
-  isOpen,
-  toggleModal,
-  selectedOrder,
-  openCreateOrder,
-  finishOrder,
-  selectedOrderPaymentStatus,
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const writeAllowed = user ? canWrite(user.role) : false;
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -232,7 +208,7 @@ export const OrdersHeader: React.FC<{
           <button
             type="button"
             className={`btn-base btn-secondary rounded-md text-xs px-3 py-1.5 ${styles.primaryButton}`}
-            onClick={openCreateOrder}
+            onClick={() => navigate("/orders/new")}
             aria-label="Crear nuevo pedido"
           >
             <svg
@@ -253,19 +229,6 @@ export const OrdersHeader: React.FC<{
         </div>
       </div>
 
-      {/* Modal */}
-      <CreateOrderForm
-        isOpen={isOpen}
-        selectedOrder={selectedOrder || undefined}
-        createOrder={createOrder}
-        getAllOrders={getAllOrders}
-        toggleModal={toggleModal}
-        openCreateOrder={openCreateOrder}
-        updateOrder={updateOrder}
-        finishOrder={finishOrder}
-        selectedOrderPaymentStatus={selectedOrderPaymentStatus}
-        showTrigger={false}
-      />
     </div>
   );
 };

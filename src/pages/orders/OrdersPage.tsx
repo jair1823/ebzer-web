@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Toast } from "../../components";
 import { useOrders, useToast } from "../../hooks";
 import { AgendaItemForm } from "../agenda/AgendaItemForm";
@@ -38,15 +39,10 @@ export const OrdersPage: React.FC = () => {
   const {
     orders,
     loading,
-    createOrder,
-    selectedOrder,
-    setSelectedOrder,
-    updateOrder,
     finishOrder,
     paymentStatuses,
-    getAllOrders,
   } = useOrders();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const navigate = useNavigate();
   const [isAgendaNoteOpen, setIsAgendaNoteOpen] = React.useState(false);
   const [selectedAgendaNoteOrder, setSelectedAgendaNoteOrder] =
     React.useState<Order | null>(null);
@@ -102,18 +98,8 @@ export const OrdersPage: React.FC = () => {
     loadMonthlyIncomes();
   }, [loadMonthlyIncomes]);
 
-  const toggleModal = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleOpenCreateOrder = () => {
-    setIsOpen(true);
-    setSelectedOrder(null);
-  };
-
   const handleClickRow = (orderId: number) => {
-    setSelectedOrder(orders.find((order) => order.id === orderId) || null);
-    toggleModal();
+    navigate(`/orders/${orderId}/edit`);
   };
 
   const handleOpenAgendaNote = (order: Order) => {
@@ -198,12 +184,6 @@ export const OrdersPage: React.FC = () => {
     };
   }, [monthRange.label, monthlyIncome, orders, paymentStatuses]);
 
-  const refreshOrdersAndSummary = React.useCallback(async () => {
-    const response = await getAllOrders();
-    await loadMonthlyIncomes();
-    return response;
-  }, [getAllOrders, loadMonthlyIncomes]);
-
   const finishOrderAndRefreshSummary = React.useCallback(
     async (orderId: number) => {
       const response = await finishOrder(orderId);
@@ -219,17 +199,6 @@ export const OrdersPage: React.FC = () => {
         summary={ordersSummary}
         filters={filters}
         setFilters={setFilters}
-        createOrder={createOrder}
-        getAllOrders={refreshOrdersAndSummary}
-        updateOrder={updateOrder}
-        isOpen={isOpen}
-        openCreateOrder={handleOpenCreateOrder}
-        toggleModal={toggleModal}
-        selectedOrder={selectedOrder}
-        finishOrder={finishOrderAndRefreshSummary}
-        selectedOrderPaymentStatus={
-          selectedOrder ? paymentStatuses.get(selectedOrder.id) ?? null : null
-        }
       />
       <OrdersTable
         orders={sortedOrders}

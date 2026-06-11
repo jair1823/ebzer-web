@@ -1,11 +1,12 @@
 import "./App.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import { AgendaPage, ExpensesPage, OrderStatusesPage, OrdersPage } from "./pages";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { ThemeToggle } from "./components";
 import { ProtectedRoute, RequireRole } from "./auth";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { UsersPage } from "./pages";
+import { CreateOrderForm } from "./pages/orders/CreateOrderForm";
 
 const router = createBrowserRouter([
   {
@@ -21,7 +22,19 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
+            element: <Navigate to="/orders" replace />,
+          },
+          {
+            path: "orders",
             element: <OrdersPage />,
+          },
+          {
+            path: "orders/new",
+            element: <CreateOrderForm />,
+          },
+          {
+            path: "orders/:id/edit",
+            element: <CreateOrderForm />,
           },
           {
             path: "agenda",
