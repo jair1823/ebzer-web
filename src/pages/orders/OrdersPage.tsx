@@ -18,10 +18,13 @@ import { agendaService, incomesService } from "../../services";
 
 const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
 
-const getIsMobileOrdersViewport = (): boolean => {
+const CARDS_ONLY_VIEWPORT_QUERY = "(max-width: 972px)";
+const UNGROUPED_CARDS_VIEWPORT_QUERY = "(max-width: 767px)";
+
+const matchesViewportQuery = (query: string): boolean => {
   return (
     typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 767px)").matches
+    window.matchMedia(query).matches
   );
 };
 
@@ -60,8 +63,11 @@ export const OrdersPage: React.FC = () => {
     status_ids: [],
   });
   const [viewMode, setViewMode] = React.useState<OrdersViewMode>("table");
-  const [isMobileViewport, setIsMobileViewport] = React.useState(
-    getIsMobileOrdersViewport
+  const [isCardsOnlyViewport, setIsCardsOnlyViewport] = React.useState(() =>
+    matchesViewportQuery(CARDS_ONLY_VIEWPORT_QUERY)
+  );
+  const [isUngroupedCardsViewport, setIsUngroupedCardsViewport] = React.useState(() =>
+    matchesViewportQuery(UNGROUPED_CARDS_VIEWPORT_QUERY)
   );
   const {
     isVisible: isToastVisible,
@@ -111,16 +117,22 @@ export const OrdersPage: React.FC = () => {
   }, [loadMonthlyIncomes]);
 
   React.useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 767px)");
-    const updateIsMobileViewport = () => {
-      setIsMobileViewport(mediaQuery.matches);
+    const cardsOnlyMediaQuery = window.matchMedia(CARDS_ONLY_VIEWPORT_QUERY);
+    const ungroupedCardsMediaQuery = window.matchMedia(
+      UNGROUPED_CARDS_VIEWPORT_QUERY
+    );
+    const updateViewportMode = () => {
+      setIsCardsOnlyViewport(cardsOnlyMediaQuery.matches);
+      setIsUngroupedCardsViewport(ungroupedCardsMediaQuery.matches);
     };
 
-    updateIsMobileViewport();
-    mediaQuery.addEventListener("change", updateIsMobileViewport);
+    updateViewportMode();
+    cardsOnlyMediaQuery.addEventListener("change", updateViewportMode);
+    ungroupedCardsMediaQuery.addEventListener("change", updateViewportMode);
 
     return () => {
-      mediaQuery.removeEventListener("change", updateIsMobileViewport);
+      cardsOnlyMediaQuery.removeEventListener("change", updateViewportMode);
+      ungroupedCardsMediaQuery.removeEventListener("change", updateViewportMode);
     };
   }, []);
 
@@ -218,7 +230,7 @@ export const OrdersPage: React.FC = () => {
     },
     [finishOrder, loadMonthlyIncomes]
   );
-  const effectiveViewMode: OrdersViewMode = isMobileViewport ? "cards" : viewMode;
+  const effectiveViewMode: OrdersViewMode = isCardsOnlyViewport ? "cards" : viewMode;
 
   return (
     <div className="py-2">
@@ -242,7 +254,7 @@ export const OrdersPage: React.FC = () => {
         <OrdersCards
           orders={sortedOrders}
           loading={loading}
-          groupByStatus={!isMobileViewport}
+          groupByStatus={!isUngroupedCardsViewport}
           onClickRow={handleClickRow}
           onCreateAgendaNote={handleOpenAgendaNote}
           finishOrder={finishOrderAndRefreshSummary}

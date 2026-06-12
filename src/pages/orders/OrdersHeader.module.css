@@ -82,7 +82,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 972px) {
   .viewSwitch {
     display: none;
   }
