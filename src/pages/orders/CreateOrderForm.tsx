@@ -12,6 +12,7 @@ import type {
   TemporaryIncome,
   OrderStatusOption,
   PaymentStatus,
+  OrderPlatform,
 } from "./types";
 import type { Income } from "../incomes/types";
 import { ConfirmModal, Toast, StatusPicker } from "../../components";
@@ -39,6 +40,7 @@ const createInitialFormData = (): OrderFormData => ({
   // Default estimated delivery = creation day + 3 days (do not count creation day)
   estimated_delivery_date: getLocalDatePlusDays(3),
   delivery_type: "shipping",
+  platform: "whatsapp",
   client_name: "",
   client_phone: "",
   notes: "",
@@ -58,10 +60,17 @@ const orderToFormData = (order: Order): OrderFormData => ({
       })()
     : "",
   delivery_type: order.delivery_type || "shipping",
+  platform: order.platform || "whatsapp",
   client_name: order.client_name || "",
   client_phone: order.client_phone || "",
   notes: order.notes || "",
 });
+
+const platformOptions: Array<{ value: OrderPlatform; label: string }> = [
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "instagram", label: "Instagram" },
+  { value: "facebook", label: "Facebook" },
+];
 
 export const CreateOrderForm: React.FC = () => {
   const navigate = useNavigate();
@@ -261,6 +270,7 @@ export const CreateOrderForm: React.FC = () => {
           ? new Date(`${formData.estimated_delivery_date}T00:00:00`).toISOString()
           : null,
         delivery_type: formData.delivery_type,
+        platform: formData.platform,
         client_name: formData.client_name,
         client_phone: formData.client_phone || "",
         notes: formData.notes || "",
@@ -551,6 +561,34 @@ export const CreateOrderForm: React.FC = () => {
                             placeholder="Ej. +506 8888 9999"
                           />
                         </div>
+
+                        <fieldset className="sm:col-span-2">
+                          <legend className="mb-2 block text-sm font-medium text-primary">
+                            Plataforma
+                          </legend>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {platformOptions.map((option) => (
+                              <label
+                                key={option.value}
+                                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
+                                  formData.platform === option.value
+                                    ? "border-primary bg-primary-soft text-primary"
+                                    : "border-default bg-surface text-secondary hover:bg-surface-hover"
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="platform"
+                                  value={option.value}
+                                  checked={formData.platform === option.value}
+                                  onChange={handleChange}
+                                  className="h-4 w-4 accent-[rgb(var(--primary))]"
+                                />
+                                <span>{option.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
                       </div>
                     </section>
 

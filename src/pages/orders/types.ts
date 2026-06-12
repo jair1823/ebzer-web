@@ -1,4 +1,5 @@
 export type DeliveryType = "pickup" | "shipping" | "delivery";
+export type OrderPlatform = "whatsapp" | "instagram" | "facebook";
 
 export interface OrderStatusOption {
   id: number;
@@ -17,6 +18,7 @@ export interface OrderFormData {
   status_id: number | null;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;
+  platform: OrderPlatform;
   client_name: string;
   client_phone: string;
   notes: string;
@@ -33,6 +35,7 @@ export interface Order {
   paid_at: string | null;
   estimated_delivery_date: string | null;
   delivery_type: DeliveryType;
+  platform: OrderPlatform;
   client_name: string;
   client_phone: string | null;
   notes: string | null;
