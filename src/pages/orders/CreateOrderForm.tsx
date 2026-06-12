@@ -4,7 +4,7 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useBeforeUnload, useBlocker, useNavigate, useParams } from "react-router-dom";
 import type {
   OrderFormData,
   DeliveryType,
@@ -78,6 +78,7 @@ export const CreateOrderForm: React.FC = () => {
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const allowNavigationRef = React.useRef(false);
   
   // Track original state for change detection
   const [originalFormData, setOriginalFormData] = useState<OrderFormData>(initialFormData);
@@ -97,6 +98,38 @@ export const CreateOrderForm: React.FC = () => {
     showError,
   } = useToast();
 
+  const hasUnsavedChanges = React.useCallback((): boolean => {
+    const formChanged = JSON.stringify(formData) !== JSON.stringify(originalFormData);
+
+    const newIncomes = incomes.filter((income) => !income.isExisting);
+    const originalNewIncomes = originalIncomes.filter(
+      (income) => !income.isExisting
+    );
+    const incomesChanged = JSON.stringify(newIncomes) !== JSON.stringify(originalNewIncomes);
+
+    return formChanged || incomesChanged;
+  }, [formData, incomes, originalFormData, originalIncomes]);
+
+  const shouldBlockNavigation = React.useCallback(
+    () => hasUnsavedChanges() && !allowNavigationRef.current,
+    [hasUnsavedChanges]
+  );
+  const blocker = useBlocker(shouldBlockNavigation);
+
+  useBeforeUnload(
+    React.useCallback(
+      (event) => {
+        if (!hasUnsavedChanges() || allowNavigationRef.current) {
+          return;
+        }
+
+        event.preventDefault();
+        event.returnValue = "";
+      },
+      [hasUnsavedChanges]
+    )
+  );
+
   const validateForm = (): boolean => {
     // description and client_name are required
     return (
@@ -104,19 +137,6 @@ export const CreateOrderForm: React.FC = () => {
       formData.client_name.trim() !== "" &&
       (selectedOrder !== null || formData.status_id !== null)
     );
-  };
-
-  // Check if form has unsaved changes
-  const hasUnsavedChanges = (): boolean => {
-    // Compare formData
-    const formChanged = JSON.stringify(formData) !== JSON.stringify(originalFormData);
-    
-    // Compare incomes (only new ones matter for change detection)
-    const newIncomes = incomes.filter(inc => !inc.isExisting);
-    const originalNewIncomes = originalIncomes.filter(inc => !inc.isExisting);
-    const incomesChanged = JSON.stringify(newIncomes) !== JSON.stringify(originalNewIncomes);
-    
-    return formChanged || incomesChanged;
   };
 
   // Load existing incomes when editing an order
@@ -169,10 +189,12 @@ export const CreateOrderForm: React.FC = () => {
         cancelText: "Continuar editando",
         variant: "warning",
         onConfirm: () => {
+          allowNavigationRef.current = true;
           navigate("/orders");
         },
       });
     } else {
+      allowNavigationRef.current = true;
       navigate("/orders");
     }
   };
@@ -201,7 +223,7 @@ export const CreateOrderForm: React.FC = () => {
       title: "Finalizar y registrar pago",
       message:
         "Esto puede crear un ingreso por el saldo pendiente, cambiar el pedido a completado y marcarlo como pagado.",
-      confirmText: "Finalizar y registrar pago",
+      confirmText: "Finalizar",
       cancelText: "Cancelar",
       variant: "info",
       onConfirm: async () => {
@@ -212,6 +234,7 @@ export const CreateOrderForm: React.FC = () => {
               ? `Pago registrado por ${formatCurrency(result.amount_paid)}`
               : "Pedido marcado como pagado"
           );
+          allowNavigationRef.current = true;
           navigate("/orders");
         } catch (error) {
           console.error("Error finishing order:", error);
@@ -284,6 +307,7 @@ export const CreateOrderForm: React.FC = () => {
       setNewIncomeDate(getTodayLocalDate());
       setOriginalFormData(freshInitialData);
       setOriginalIncomes([]);
+      allowNavigationRef.current = true;
       navigate("/orders");
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -300,6 +324,7 @@ export const CreateOrderForm: React.FC = () => {
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     let isCancelled = false;
+    allowNavigationRef.current = false;
 
     const resetCreateState = () => {
       const freshInitialData = createInitialFormData();
@@ -766,7 +791,7 @@ export const CreateOrderForm: React.FC = () => {
                           handleFinishClick(selectedOrder.id);
                         }}
                       >
-                        Finalizar y registrar pago
+                        Finalizar
                       </button>
                     )}
 
@@ -797,6 +822,22 @@ export const CreateOrderForm: React.FC = () => {
           {...config}
         />
       )}
+      <ConfirmModal
+        isOpen={blocker.state === "blocked"}
+        onClose={() => undefined}
+        title="Cambios sin guardar"
+        message="Tienes cambios sin guardar. ¿Estás seguro de que deseas cerrar el formulario?"
+        confirmText="Cerrar sin guardar"
+        cancelText="Continuar editando"
+        variant="warning"
+        onConfirm={() => {
+          allowNavigationRef.current = true;
+          blocker.proceed?.();
+        }}
+        onCancel={() => {
+          blocker.reset?.();
+        }}
+      />
       {/* Toast Notification */}
       <Toast
         isVisible={isToastVisible}

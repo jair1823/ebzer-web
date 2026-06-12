@@ -34,7 +34,7 @@ export const OrdersTable: React.FC<{
       title: "Finalizar y registrar pago",
       message:
         "Esto puede crear un ingreso por el saldo pendiente, cambiar el pedido a completado y marcarlo como pagado.",
-      confirmText: "Finalizar y registrar pago",
+      confirmText: "Finalizar",
       cancelText: "Cancelar",
       variant: "info",
       onConfirm: async () => {
@@ -165,7 +165,7 @@ export const OrdersTable: React.FC<{
                             handleFinishClick(order.id);
                           }}
                         >
-                          Finalizar y registrar pago
+                          Finalizar
                         </button>
                       )}
                     </div>
