@@ -10,6 +10,14 @@ import {
 } from "../../utils";
 import { canWrite, useAuth } from "../../auth";
 
+const DETAIL_MAX_LENGTH = 30;
+
+const formatDetailText = (detail: string): string => {
+  return detail.length > DETAIL_MAX_LENGTH
+    ? `${detail.slice(0, DETAIL_MAX_LENGTH)}...`
+    : detail;
+};
+
 export const OrdersTable: React.FC<{
   orders: Order[];
   loading: boolean;
@@ -124,7 +132,12 @@ export const OrdersTable: React.FC<{
                       : "-"}
                   </td>
                   <td className="px-6 py-3 text-sm text-primary text-left">
-                    {order.description}
+                    <span
+                      className="block max-w-[18rem] overflow-hidden text-ellipsis whitespace-nowrap"
+                      title={order.description}
+                    >
+                      {formatDetailText(order.description)}
+                    </span>
                   </td>
                   <td className="px-6 py-3 text-sm text-center">
                     {paymentStatuses.get(order.id) ? (
