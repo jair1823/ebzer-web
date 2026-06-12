@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Toast } from "../../components";
 import { useOrders, useToast } from "../../hooks";
 import { AgendaItemForm } from "../agenda/AgendaItemForm";
+import { OrdersCards } from "./OrdersCards";
 import { OrdersHeader } from "./OrdersHeader";
 import { OrdersTable } from "./OrdersTable";
 import type { AgendaCreatePayload, AgendaItemFormData } from "../agenda/types";
-import type { Order, OrderFilters } from "./types";
+import type { Order, OrderFilters, OrdersViewMode } from "./types";
 
 import {
   formatOrderId,
@@ -16,6 +17,13 @@ import {
 import { agendaService, incomesService } from "../../services";
 
 const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
+
+const getIsMobileOrdersViewport = (): boolean => {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches
+  );
+};
 
 const getMonthLabel = (date: Date): string => {
   const month = new Intl.DateTimeFormat("es-CR", { month: "long" }).format(date);
@@ -51,6 +59,10 @@ export const OrdersPage: React.FC = () => {
     dateTo: null,
     status_ids: [],
   });
+  const [viewMode, setViewMode] = React.useState<OrdersViewMode>("table");
+  const [isMobileViewport, setIsMobileViewport] = React.useState(
+    getIsMobileOrdersViewport
+  );
   const {
     isVisible: isToastVisible,
     config: toastConfig,
@@ -97,6 +109,20 @@ export const OrdersPage: React.FC = () => {
   React.useEffect(() => {
     loadMonthlyIncomes();
   }, [loadMonthlyIncomes]);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateIsMobileViewport = () => {
+      setIsMobileViewport(mediaQuery.matches);
+    };
+
+    updateIsMobileViewport();
+    mediaQuery.addEventListener("change", updateIsMobileViewport);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateIsMobileViewport);
+    };
+  }, []);
 
   const handleClickRow = (orderId: number) => {
     navigate(`/orders/${orderId}/edit`);
@@ -192,6 +218,7 @@ export const OrdersPage: React.FC = () => {
     },
     [finishOrder, loadMonthlyIncomes]
   );
+  const effectiveViewMode: OrdersViewMode = isMobileViewport ? "cards" : viewMode;
 
   return (
     <div className="py-2">
@@ -199,15 +226,28 @@ export const OrdersPage: React.FC = () => {
         summary={ordersSummary}
         filters={filters}
         setFilters={setFilters}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
       />
-      <OrdersTable
-        orders={sortedOrders}
-        loading={loading}
-        onClickRow={handleClickRow}
-        onCreateAgendaNote={handleOpenAgendaNote}
-        finishOrder={finishOrderAndRefreshSummary}
-        paymentStatuses={paymentStatuses}
-      />
+      {effectiveViewMode === "table" ? (
+        <OrdersTable
+          orders={sortedOrders}
+          loading={loading}
+          onClickRow={handleClickRow}
+          onCreateAgendaNote={handleOpenAgendaNote}
+          finishOrder={finishOrderAndRefreshSummary}
+          paymentStatuses={paymentStatuses}
+        />
+      ) : (
+        <OrdersCards
+          orders={sortedOrders}
+          loading={loading}
+          groupByStatus={!isMobileViewport}
+          onClickRow={handleClickRow}
+          onCreateAgendaNote={handleOpenAgendaNote}
+          finishOrder={finishOrderAndRefreshSummary}
+        />
+      )}
       <AgendaItemForm
         isOpen={isAgendaNoteOpen}
         selectedItem={null}

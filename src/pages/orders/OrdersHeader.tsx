@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import type { OrderFilters, OrdersSummary } from "./types";
+import type { OrderFilters, OrdersSummary, OrdersViewMode } from "./types";
 import { StatusMultiSelect } from "../../components";
 import { formatCurrency } from "../../utils";
 import styles from "./OrdersHeader.module.css";
@@ -10,10 +10,14 @@ export const OrdersHeader: React.FC<{
   summary: OrdersSummary;
   filters: OrderFilters;
   setFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
+  viewMode: OrdersViewMode;
+  setViewMode: React.Dispatch<React.SetStateAction<OrdersViewMode>>;
 }> = ({
   summary,
   filters,
   setFilters,
+  viewMode,
+  setViewMode,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -98,6 +102,28 @@ export const OrdersHeader: React.FC<{
 
         {/* Botones de acción inline */}
         <div className={`flex items-center justify-end gap-2 ${styles.actionGroup}`}>
+          <div className={styles.viewSwitch} aria-label="Vista de pedidos">
+            <button
+              type="button"
+              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+                viewMode === "table" ? "btn-secondary" : "btn-outline"
+              }`}
+              onClick={() => setViewMode("table")}
+              aria-pressed={viewMode === "table"}
+            >
+              Tabla
+            </button>
+            <button
+              type="button"
+              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+                viewMode === "cards" ? "btn-secondary" : "btn-outline"
+              }`}
+              onClick={() => setViewMode("cards")}
+              aria-pressed={viewMode === "cards"}
+            >
+              Tarjetas
+            </button>
+          </div>
           
           {/* Botón Filtros con dropdown */}
           <div className="relative" ref={filterRef}>
