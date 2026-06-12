@@ -1,13 +1,6 @@
 import React from "react";
-import { CreateOrderForm } from "./CreateOrderForm";
-import type {
-  FinishOrderResponse,
-  Order,
-  OrderFormData,
-  OrderFilters,
-  OrdersSummary,
-  PaymentStatus,
-} from "./types";
+import { useNavigate } from "react-router-dom";
+import type { OrderFilters, OrdersSummary, OrdersViewMode } from "./types";
 import { StatusMultiSelect } from "../../components";
 import { formatCurrency } from "../../utils";
 import styles from "./OrdersHeader.module.css";
@@ -17,30 +10,17 @@ export const OrdersHeader: React.FC<{
   summary: OrdersSummary;
   filters: OrderFilters;
   setFilters: React.Dispatch<React.SetStateAction<OrderFilters>>;
-  isOpen: boolean;
-  selectedOrder?: Order | null;
-  createOrder: (data: OrderFormData) => Promise<{ id: number }>;
-  getAllOrders: () => Promise<Order[] | undefined>;
-  updateOrder: (orderId: number, data: OrderFormData) => Promise<unknown>;
-  toggleModal: () => void;
-  openCreateOrder: () => void;
-  finishOrder: (orderId: number) => Promise<FinishOrderResponse>;
-  selectedOrderPaymentStatus?: PaymentStatus | null;
+  viewMode: OrdersViewMode;
+  setViewMode: React.Dispatch<React.SetStateAction<OrdersViewMode>>;
 }> = ({
   summary,
   filters,
   setFilters,
-  createOrder,
-  getAllOrders,
-  updateOrder,
-  isOpen,
-  toggleModal,
-  selectedOrder,
-  openCreateOrder,
-  finishOrder,
-  selectedOrderPaymentStatus,
+  viewMode,
+  setViewMode,
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const writeAllowed = user ? canWrite(user.role) : false;
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -122,6 +102,28 @@ export const OrdersHeader: React.FC<{
 
         {/* Botones de acción inline */}
         <div className={`flex items-center justify-end gap-2 ${styles.actionGroup}`}>
+          <div className={styles.viewSwitch} aria-label="Vista de pedidos">
+            <button
+              type="button"
+              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+                viewMode === "table" ? "btn-secondary" : "btn-outline"
+              }`}
+              onClick={() => setViewMode("table")}
+              aria-pressed={viewMode === "table"}
+            >
+              Tabla
+            </button>
+            <button
+              type="button"
+              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+                viewMode === "cards" ? "btn-secondary" : "btn-outline"
+              }`}
+              onClick={() => setViewMode("cards")}
+              aria-pressed={viewMode === "cards"}
+            >
+              Tarjetas
+            </button>
+          </div>
           
           {/* Botón Filtros con dropdown */}
           <div className="relative" ref={filterRef}>
@@ -232,7 +234,7 @@ export const OrdersHeader: React.FC<{
           <button
             type="button"
             className={`btn-base btn-secondary rounded-md text-xs px-3 py-1.5 ${styles.primaryButton}`}
-            onClick={openCreateOrder}
+            onClick={() => navigate("/orders/new")}
             aria-label="Crear nuevo pedido"
           >
             <svg
@@ -253,19 +255,6 @@ export const OrdersHeader: React.FC<{
         </div>
       </div>
 
-      {/* Modal */}
-      <CreateOrderForm
-        isOpen={isOpen}
-        selectedOrder={selectedOrder || undefined}
-        createOrder={createOrder}
-        getAllOrders={getAllOrders}
-        toggleModal={toggleModal}
-        openCreateOrder={openCreateOrder}
-        updateOrder={updateOrder}
-        finishOrder={finishOrder}
-        selectedOrderPaymentStatus={selectedOrderPaymentStatus}
-        showTrigger={false}
-      />
     </div>
   );
 };

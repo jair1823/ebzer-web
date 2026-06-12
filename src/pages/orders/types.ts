@@ -56,6 +56,8 @@ export interface OrdersSummary {
   monthLabel: string;
 }
 
+export type OrdersViewMode = "table" | "cards";
+
 export interface FinishOrderResponse {
   finished: boolean;
   income_created: boolean;

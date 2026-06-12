@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
   };
 
   const allNavItems = [
-    { path: "/", label: "Pedidos", icon: "📦", adminOnly: false },
+    { path: "/orders", label: "Pedidos", icon: "📦", adminOnly: false },
     { path: "/agenda", label: "Agenda", icon: "🗓️", adminOnly: false },
     { path: "/expenses", label: "Gastos", icon: "📊", adminOnly: false },
     { path: "/settings/statuses", label: "Estados", icon: "⚙️", canShow: canManageOrderStatuses },
@@ -61,7 +61,7 @@ export const Navbar: React.FC = () => {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  end={item.path === "/"}
+                  end={item.path === "/orders"}
                   className={({ isActive }) =>
                     `group relative flex h-12 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-all duration-150 ${
                       isActive
@@ -139,7 +139,7 @@ export const Navbar: React.FC = () => {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  end={item.path === "/"}
+                  end={item.path === "/orders"}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-base font-medium transition-colors ${
