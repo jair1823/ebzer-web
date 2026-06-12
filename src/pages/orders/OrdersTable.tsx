@@ -57,11 +57,11 @@ export const OrdersTable: React.FC<{
               <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
                 Cliente
               </th>
-              <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
-                Estado de Pago
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-secondary">
+                Detalle
               </th>
               <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary">
-                Monto
+                Estado de Pago
               </th>
               <th className="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wide text-secondary w-1 whitespace-nowrap">
                 Entrega Estimada
@@ -123,6 +123,9 @@ export const OrdersTable: React.FC<{
                       ? order.client_phone
                       : "-"}
                   </td>
+                  <td className="px-6 py-3 text-sm text-primary text-left">
+                    {order.description}
+                  </td>
                   <td className="px-6 py-3 text-sm text-center">
                     {paymentStatuses.get(order.id) ? (
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getPaymentBadgeClasses(paymentStatuses.get(order.id)!)}`}>
@@ -131,13 +134,6 @@ export const OrdersTable: React.FC<{
                     ) : (
                       <span className="text-xs text-tertiary">Cargando...</span>
                     )}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-primary text-center font-medium">
-                    {new Intl.NumberFormat("es-CR", {
-                      style: "currency",
-                      currency: "CRC",
-                      minimumFractionDigits: 0,
-                    }).format(order.amount_charged)}
                   </td>
                   <td className="px-6 py-3 text-sm text-primary text-center whitespace-nowrap">
                     {order.estimated_delivery_date
