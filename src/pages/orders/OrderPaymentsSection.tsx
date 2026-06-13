@@ -51,7 +51,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
                 {income.date ? new Date(income.date).toLocaleDateString('es-CR') : 'Sin fecha'}
               </p>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" data-invoice-exclude="true">
               {!income.isExisting && (
                 <button
                   type="button"
@@ -69,7 +69,10 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
         ))}
 
         {/* Input row - always at the end */}
-        <div className="flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 bg-surface-elevated border-subtle">
+        <div
+          className="flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 bg-surface-elevated border-subtle"
+          data-invoice-exclude="true"
+        >
           <div className="flex-1">
             <input
               type="number"

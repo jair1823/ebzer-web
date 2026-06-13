@@ -4,6 +4,7 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { toPng } from "html-to-image";
 import { useBeforeUnload, useBlocker, useNavigate, useParams } from "react-router-dom";
 import type {
   OrderFormData,
@@ -87,7 +88,9 @@ export const CreateOrderForm: React.FC = () => {
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const allowNavigationRef = React.useRef(false);
+  const invoiceCaptureRef = React.useRef<HTMLDivElement | null>(null);
   
   // Track original state for change detection
   const [originalFormData, setOriginalFormData] = useState<OrderFormData>(initialFormData);
@@ -251,6 +254,53 @@ export const CreateOrderForm: React.FC = () => {
         }
       },
     });
+  };
+
+  const handleDownloadInvoiceImage = async () => {
+    if (isDownloadingInvoice) {
+      return;
+    }
+
+    const captureNode = invoiceCaptureRef.current;
+    if (!captureNode) {
+      showError("No se pudo generar la imagen");
+      return;
+    }
+
+    setIsDownloadingInvoice(true);
+    try {
+      const pixelRatio = Math.min((window.devicePixelRatio || 1) * 2, 3);
+      const backgroundColor =
+        window.getComputedStyle(document.body).backgroundColor || "#ffffff";
+      const dataUrl = await toPng(captureNode, {
+        cacheBust: true,
+        pixelRatio,
+        backgroundColor,
+        filter: (node) => {
+          return !(
+            node instanceof HTMLElement &&
+            node.dataset.invoiceExclude === "true"
+          );
+        },
+      });
+
+      const link = document.createElement("a");
+      const orderIdPart = selectedOrder
+        ? formatOrderId(selectedOrder.id)
+        : "nuevo";
+      link.download = `pedido-${orderIdPart}-factura.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      showSuccess("Imagen descargada");
+    } catch (error) {
+      console.error("Error generating invoice image:", error);
+      showError("No se pudo generar la imagen");
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -730,77 +780,100 @@ export const CreateOrderForm: React.FC = () => {
                   </div>
 
                   <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
-                    
+                    <button
+                      type="button"
+                      onClick={handleDownloadInvoiceImage}
+                      disabled={isDownloadingInvoice}
+                      className="btn-base btn-outline w-full justify-center gap-2 rounded-xl px-4 py-2.5"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                      {isDownloadingInvoice ? "Generando..." : "Descargar imagen"}
+                    </button>
 
-                    {/* Payment Status Card */}
-                    <section className="overflow-hidden rounded-3xl shadow-xl surface-elevated">
-                      <div className="border-b px-6 py-4 border-subtle bg-surface-elevated">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-tertiary">
-                          Estado de Pago
-                        </p>
-                      </div>
-
-                      <div className="px-6 py-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${getPaymentBadgeClasses(paymentStatus)}`}>
-                            {getPaymentBadgeText(paymentStatus)}
-                          </span>
-                          <span className="text-2xl font-bold text-primary">
-                            {Math.round(paymentStatus.percentage_paid)}%
-                          </span>
+                    <div ref={invoiceCaptureRef} className="space-y-5 bg-background">
+                      {/* Payment Status Card */}
+                      <section className="overflow-hidden rounded-3xl shadow-xl surface-elevated">
+                        <div className="border-b px-6 py-4 border-subtle bg-surface-elevated">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-tertiary">
+                            Estado de Pago
+                          </p>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-full bg-subtle rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              paymentStatus.is_fully_paid
-                                ? 'bg-success'
-                                : paymentStatus.percentage_paid > 0
-                                ? 'bg-warning'
-                                : 'bg-danger'
-                            }`}
-                            style={{ width: `${Math.min(paymentStatus.percentage_paid, 100)}%` }}
-                            role="progressbar"
-                            aria-valuenow={paymentStatus.percentage_paid}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                          />
+                        <div className="px-6 py-6 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${getPaymentBadgeClasses(paymentStatus)}`}>
+                              {getPaymentBadgeText(paymentStatus)}
+                            </span>
+                            <span className="text-2xl font-bold text-primary">
+                              {Math.round(paymentStatus.percentage_paid)}%
+                            </span>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="w-full bg-subtle rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-300 ${
+                                paymentStatus.is_fully_paid
+                                  ? 'bg-success'
+                                  : paymentStatus.percentage_paid > 0
+                                  ? 'bg-warning'
+                                  : 'bg-danger'
+                              }`}
+                              style={{ width: `${Math.min(paymentStatus.percentage_paid, 100)}%` }}
+                              role="progressbar"
+                              aria-valuenow={paymentStatus.percentage_paid}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                            />
+                          </div>
+
+                          {/* Payment Details */}
+                          <dl className="space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <dt className="text-secondary">Pagado</dt>
+                              <dd className="font-semibold text-success">
+                                {formatCurrency(paymentStatus.total_paid)}
+                              </dd>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <dt className="text-secondary">Por cobrar</dt>
+                              <dd className="font-semibold text-danger">
+                                {formatCurrency(paymentStatus.remaining)}
+                              </dd>
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-subtle">
+                              <dt className="text-secondary">Total pedido</dt>
+                              <dd className="font-bold text-primary">
+                                {formatCurrency(paymentStatus.amount_charged)}
+                              </dd>
+                            </div>
+                          </dl>
                         </div>
+                      </section>
 
-                        {/* Payment Details */}
-                        <dl className="space-y-2 text-sm">
-                          <div className="flex items-center justify-between">
-                            <dt className="text-secondary">Total cobrado</dt>
-                            <dd className="font-semibold text-success">
-                              {formatCurrency(paymentStatus.total_paid)}
-                            </dd>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <dt className="text-secondary">Por cobrar</dt>
-                            <dd className="font-semibold text-danger">
-                              {formatCurrency(paymentStatus.remaining)}
-                            </dd>
-                          </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-subtle">
-                            <dt className="text-secondary">Total pedido</dt>
-                            <dd className="font-bold text-primary">
-                              {formatCurrency(paymentStatus.amount_charged)}
-                            </dd>
-                          </div>
-                        </dl>
-                      </div>
-                    </section>
-
-                    <OrderPaymentsSection
-                      incomes={incomes}
-                      newIncomeAmount={newIncomeAmount}
-                      newIncomeDate={newIncomeDate}
-                      onIncomeAmountChange={setNewIncomeAmount}
-                      onIncomeDateChange={setNewIncomeDate}
-                      onAddIncome={handleAddIncome}
-                      onRemoveIncome={handleRemoveIncome}
-                    />
+                      <OrderPaymentsSection
+                        incomes={incomes}
+                        newIncomeAmount={newIncomeAmount}
+                        newIncomeDate={newIncomeDate}
+                        onIncomeAmountChange={setNewIncomeAmount}
+                        onIncomeDateChange={setNewIncomeDate}
+                        onAddIncome={handleAddIncome}
+                        onRemoveIncome={handleRemoveIncome}
+                      />
+                    </div>
                   </aside>
                 </div>
               </div>
