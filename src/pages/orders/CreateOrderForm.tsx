@@ -5,6 +5,7 @@ import React, {
   type FormEvent,
 } from "react";
 import { toPng } from "html-to-image";
+import { Download, X } from "lucide-react";
 import { useBeforeUnload, useBlocker, useNavigate, useParams } from "react-router-dom";
 import type {
   OrderFormData,
@@ -16,10 +17,10 @@ import type {
   OrderPlatform,
 } from "./types";
 import type { Income } from "../incomes/types";
-import { ConfirmModal, Toast, StatusPicker } from "../../components";
+import { ConfirmModal, PaymentBadgeContent, Toast, StatusPicker } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
 import { incomesService, ordersService } from "../../services";
-import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses, getPaymentBadgeText } from "../../utils";
+import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses } from "../../utils";
 import { OrderPaymentsSection } from "./OrderPaymentsSection";
 
 // Helper to get today's date in YYYY-MM-DD format (local timezone)
@@ -560,7 +561,7 @@ export const CreateOrderForm: React.FC = () => {
                     className="rounded-full border p-2 transition-colors border-default text-secondary hover:bg-surface-elevated"
                     aria-label="Cerrar"
                   >
-                    ✕
+                    <X size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -786,20 +787,7 @@ export const CreateOrderForm: React.FC = () => {
                       disabled={isDownloadingInvoice}
                       className="btn-base btn-outline w-full justify-center gap-2 rounded-xl px-4 py-2.5"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                        />
-                      </svg>
+                      <Download size={16} strokeWidth={2} aria-hidden="true" />
                       {isDownloadingInvoice ? "Generando..." : "Descargar imagen"}
                     </button>
 
@@ -815,7 +803,7 @@ export const CreateOrderForm: React.FC = () => {
                         <div className="px-6 py-6 space-y-4">
                           <div className="flex items-center justify-between">
                             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${getPaymentBadgeClasses(paymentStatus)}`}>
-                              {getPaymentBadgeText(paymentStatus)}
+                              <PaymentBadgeContent paymentStatus={paymentStatus} iconSize={16} />
                             </span>
                             <span className="text-2xl font-bold text-primary">
                               {Math.round(paymentStatus.percentage_paid)}%

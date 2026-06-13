@@ -4,6 +4,7 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { Plus, X } from "lucide-react";
 import type { IncomeFormData, Income } from "./types";
 import { Toast } from "../../components";
 import { useToast } from "../../hooks";
@@ -111,18 +112,7 @@ export const CreateIncomeForm: React.FC<{
         className="btn-base btn-secondary focus-primary rounded-md shadow-md"
         onClick={openCreateIncome}
       >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-          className="mr-1"
-        >
-          <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-            <path d="M12 19V5" />
-            <path d="M19 12H5" />
-          </g>
-        </svg>
+        <Plus size={14} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
         Registrar ingreso
       </button>
 
@@ -152,7 +142,7 @@ export const CreateIncomeForm: React.FC<{
                     className="rounded-full border p-2 transition-colors border-default text-secondary hover:bg-surface-elevated"
                     aria-label="Cerrar"
                   >
-                    ✕
+                    <X size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
                 </div>
               </div>

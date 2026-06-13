@@ -1,4 +1,5 @@
 import React from "react";
+import { X } from "lucide-react";
 import type {
   AgendaCreatePayload,
   AgendaItem,
@@ -164,17 +165,7 @@ export const AgendaItemForm: React.FC<AgendaItemFormProps> = ({
                 className="rounded-full border p-2 transition-colors border-default text-secondary hover:bg-surface-elevated"
                 aria-label="Cerrar"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
+                <X size={16} strokeWidth={2} aria-hidden="true" />
               </button>
             </div>
           </div>

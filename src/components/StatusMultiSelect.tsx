@@ -1,4 +1,5 @@
 import React from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { orderStatusesService } from "../services";
 import type { OrderStatusOption } from "../pages/orders/types";
 
@@ -49,15 +50,12 @@ export const StatusMultiSelect: React.FC<StatusMultiSelectProps> = ({
             ? "Todos los estados"
             : `${selectedCount} estado${selectedCount > 1 ? "s" : ""}`}
         </span>
-        <svg
-          className={`h-3 w-3 text-tertiary transition-transform ${isOpen ? "rotate-180" : ""}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronDown
+          size={12}
+          strokeWidth={2}
+          aria-hidden="true"
+          className={`text-tertiary transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {isOpen && (
@@ -77,15 +75,12 @@ export const StatusMultiSelect: React.FC<StatusMultiSelectProps> = ({
                 />
                 <span className="flex-1 text-primary">{s.display_name}</span>
                 {isSelected && (
-                  <svg
-                    className="h-3 w-3 text-accent flex-shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check
+                    size={12}
+                    strokeWidth={3}
+                    aria-hidden="true"
+                    className="text-accent flex-shrink-0"
+                  />
                 )}
               </button>
             );

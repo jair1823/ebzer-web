@@ -1,4 +1,13 @@
 import React, { useState } from "react";
+import {
+  CalendarDays,
+  ChartColumn,
+  Menu,
+  Package,
+  Settings,
+  Users,
+  X,
+} from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { canManageOrderStatuses, canManageUsers, useAuth } from "../auth";
 
@@ -13,11 +22,11 @@ export const Navbar: React.FC = () => {
   };
 
   const allNavItems = [
-    { path: "/orders", label: "Pedidos", icon: "📦", adminOnly: false },
-    { path: "/agenda", label: "Agenda", icon: "🗓️", adminOnly: false },
-    { path: "/expenses", label: "Gastos", icon: "📊", adminOnly: false },
-    { path: "/settings/statuses", label: "Estados", icon: "⚙️", canShow: canManageOrderStatuses },
-    { path: "/settings/users", label: "Usuarios", icon: "👥", canShow: canManageUsers },
+    { path: "/orders", label: "Pedidos", Icon: Package, adminOnly: false },
+    { path: "/agenda", label: "Agenda", Icon: CalendarDays, adminOnly: false },
+    { path: "/expenses", label: "Gastos", Icon: ChartColumn, adminOnly: false },
+    { path: "/settings/statuses", label: "Estados", Icon: Settings, canShow: canManageOrderStatuses },
+    { path: "/settings/users", label: "Usuarios", Icon: Users, canShow: canManageUsers },
   ];
 
   const navItems = allNavItems.filter(
@@ -57,30 +66,34 @@ export const Navbar: React.FC = () => {
             </div>
 
             <div className="hidden items-center gap-1 md:flex" role="navigation">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/orders"}
-                  className={({ isActive }) =>
-                    `group relative flex h-12 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-all duration-150 ${
-                      isActive
-                        ? "border-primary text-brand-primary"
-                        : "border-transparent text-secondary hover:border-border hover:text-primary"
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span className="text-base" aria-hidden="true">{item.icon}</span>
-                      <span>{item.label}</span>
-                      {isActive && (
-                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden="true" />
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              ))}
+              {navItems.map((item) => {
+                const Icon = item.Icon;
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/orders"}
+                    className={({ isActive }) =>
+                      `group relative flex h-12 items-center gap-1.5 border-b-2 px-3 text-sm font-medium transition-all duration-150 ${
+                        isActive
+                          ? "border-primary text-brand-primary"
+                          : "border-transparent text-secondary hover:border-border hover:text-primary"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Icon size={16} strokeWidth={2} aria-hidden="true" />
+                        <span>{item.label}</span>
+                        {isActive && (
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden="true" />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
             </div>
           </div>
 
@@ -113,13 +126,9 @@ export const Navbar: React.FC = () => {
                 className="inline-flex h-10 w-10 items-center justify-center rounded-md text-secondary transition-colors hover:bg-surface-elevated hover:text-primary focus:outline-none focus:ring-2 focus:ring-inset focus-ring"
               >
                 {mobileMenuOpen ? (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X size={24} strokeWidth={2} aria-hidden="true" />
                 ) : (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                  </svg>
+                  <Menu size={24} strokeWidth={2} aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -135,24 +144,28 @@ export const Navbar: React.FC = () => {
             aria-label="Navegación móvil"
           >
             <div className="space-y-1 px-3 pb-3 pt-2">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === "/orders"}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-base font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary-soft text-brand-primary"
-                        : "text-primary hover:bg-surface-elevated hover:text-primary"
-                    }`
-                  }
-                >
-                  <span className="text-lg" aria-hidden="true">{item.icon}</span>
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
+              {navItems.map((item) => {
+                const Icon = item.Icon;
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/orders"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 rounded-lg px-4 py-2.5 text-base font-medium transition-colors ${
+                        isActive
+                          ? "bg-primary-soft text-brand-primary"
+                          : "text-primary hover:bg-surface-elevated hover:text-primary"
+                      }`
+                    }
+                  >
+                    <Icon size={18} strokeWidth={2} aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
 
               {/* Mobile user info + logout */}
               {user && (

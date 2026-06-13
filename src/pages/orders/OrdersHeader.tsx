@@ -1,4 +1,5 @@
 import React from "react";
+import { Funnel, Plus, SquareStack, Table, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { OrderFilters, OrdersSummary, OrdersViewMode } from "./types";
 import { StatusMultiSelect } from "../../components";
@@ -105,23 +106,27 @@ export const OrdersHeader: React.FC<{
           <div className={styles.viewSwitch} aria-label="Vista de pedidos">
             <button
               type="button"
-              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+              className={`btn-base h-8 w-8 rounded-md p-0 ${
                 viewMode === "table" ? "btn-secondary" : "btn-outline"
               }`}
               onClick={() => setViewMode("table")}
+              aria-label="Vista de tabla"
               aria-pressed={viewMode === "table"}
+              title="Vista de tabla"
             >
-              Tabla
+              <Table size={16} strokeWidth={2} aria-hidden="true" />
             </button>
             <button
               type="button"
-              className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+              className={`btn-base h-8 w-8 rounded-md p-0 ${
                 viewMode === "cards" ? "btn-secondary" : "btn-outline"
               }`}
               onClick={() => setViewMode("cards")}
+              aria-label="Vista de tarjetas"
               aria-pressed={viewMode === "cards"}
+              title="Vista de tarjetas"
             >
-              Tarjetas
+              <SquareStack size={16} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
           
@@ -129,25 +134,14 @@ export const OrdersHeader: React.FC<{
           <div className="relative" ref={filterRef}>
             <button
               type="button"
-              className={`btn-base btn-outline rounded-md text-xs px-3 py-1.5 ${styles.filterButton}`}
+              className={`btn-base btn-outline h-8 w-8 rounded-md p-0 ${styles.filterButton}`}
               onClick={() => setShowFilters(!showFilters)}
               aria-label="Mostrar filtros"
+              title="Mostrar filtros"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M3 6h18M8 12h8M11 18h2" strokeLinecap="round" />
-              </svg>
-              Filtros
+              <Funnel size={16} strokeWidth={2} aria-hidden="true" />
               {hasActiveFilters() && (
-                <span className={`ml-1.5 ${styles.badge} bg-accent text-white`} aria-hidden="false">
+                <span className={`${styles.badge} ${styles.filterBadge} bg-accent text-white`} aria-hidden="false">
                   {getActiveFiltersCount()}
                 </span>
               )}
@@ -212,19 +206,7 @@ export const OrdersHeader: React.FC<{
               onClick={handleClearFilters}
               aria-label="Limpiar filtros"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <X size={12} strokeWidth={2} aria-hidden="true" className="mr-1" />
               Limpiar
             </button>
           )}
@@ -237,18 +219,7 @@ export const OrdersHeader: React.FC<{
             onClick={() => navigate("/orders/new")}
             aria-label="Crear nuevo pedido"
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="mr-1"
-            >
-              <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-                <path d="M12 19V5" />
-                <path d="M19 12H5" />
-              </g>
-            </svg>
+            <Plus size={12} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
             Nuevo
           </button>
           )}

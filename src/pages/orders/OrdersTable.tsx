@@ -1,12 +1,11 @@
 import React from "react";
-import { ConfirmModal, StatusBadge } from "../../components";
+import { ConfirmModal, PaymentBadgeContent, StatusBadge } from "../../components";
 import { useConfirmModal } from "../../hooks";
 import type { FinishOrderResponse, Order, PaymentStatus } from "./types";
 import {
   formatIsoDateStringToLocale,
   formatOrderId,
   getPaymentBadgeClasses,
-  getPaymentBadgeText,
 } from "../../utils";
 import { canWrite, useAuth } from "../../auth";
 
@@ -142,7 +141,7 @@ export const OrdersTable: React.FC<{
                   <td className="px-6 py-3 text-sm text-center">
                     {paymentStatuses.get(order.id) ? (
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${getPaymentBadgeClasses(paymentStatuses.get(order.id)!)}`}>
-                        {getPaymentBadgeText(paymentStatuses.get(order.id)!)}
+                        <PaymentBadgeContent paymentStatus={paymentStatuses.get(order.id)!} />
                       </span>
                     ) : (
                       <span className="text-xs text-tertiary">Cargando...</span>

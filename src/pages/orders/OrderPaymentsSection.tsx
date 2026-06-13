@@ -1,4 +1,5 @@
 import React from "react";
+import { Plus, X } from "lucide-react";
 import type { TemporaryIncome } from "./types";
 import { formatCurrency } from "../../utils";
 
@@ -59,9 +60,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
                   className="text-danger hover:text-danger-hover p-1"
                   aria-label="Eliminar pago"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
+                  <X size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -105,9 +104,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
               className="rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white p-2 hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               aria-label="Agregar pago"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+              <Plus size={16} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </div>
