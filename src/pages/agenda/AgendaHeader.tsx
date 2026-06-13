@@ -1,4 +1,5 @@
 import React from "react";
+import { Funnel, Plus, X } from "lucide-react";
 import { AgendaFilters } from "./AgendaFilters";
 import type {
   AgendaFilters as AgendaFiltersType,
@@ -82,25 +83,14 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
           <div className="relative" ref={filterRef}>
             <button
               type="button"
-              className="btn-base btn-outline rounded-md text-xs px-3 py-1.5"
+              className="btn-base btn-outline relative h-8 w-8 rounded-md p-0"
               onClick={() => setShowFilters((value) => !value)}
               aria-label="Mostrar filtros de agenda"
+              title="Mostrar filtros de agenda"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M3 6h18M8 12h8M11 18h2" strokeLinecap="round" />
-              </svg>
-              Filtros
+              <Funnel size={16} strokeWidth={2} aria-hidden="true" />
               {hasActiveFilters && (
-                <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[10px] leading-none text-white">
+                <span className="absolute -right-2 -top-2 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[10px] leading-none text-white">
                   {activeFiltersCount}
                 </span>
               )}
@@ -124,19 +114,7 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
               onClick={() => setFilters(defaultAgendaFilters)}
               aria-label="Limpiar filtros de agenda"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-1"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <X size={12} strokeWidth={2} aria-hidden="true" className="mr-1" />
               Limpiar
             </button>
           )}
@@ -148,18 +126,7 @@ export const AgendaHeader: React.FC<AgendaHeaderProps> = ({
             onClick={openCreateItem}
             aria-label="Crear item de agenda"
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="mr-1"
-            >
-              <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-                <path d="M12 19V5" />
-                <path d="M19 12H5" />
-              </g>
-            </svg>
+            <Plus size={12} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
             Nuevo
           </button>
           )}

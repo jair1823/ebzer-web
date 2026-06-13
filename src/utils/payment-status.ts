@@ -45,7 +45,7 @@ export function getPaymentBadgeClasses(paymentStatus: PaymentStatus): string {
  */
 export function getPaymentBadgeText(paymentStatus: PaymentStatus): string {
   if (paymentStatus.is_fully_paid) {
-    return "✓ Pagado";
+    return "Pagado";
   }
   
   if (paymentStatus.percentage_paid === 0) {
@@ -54,21 +54,6 @@ export function getPaymentBadgeText(paymentStatus: PaymentStatus): string {
   
   // Pago parcial - mostrar porcentaje
   return `${Math.round(paymentStatus.percentage_paid)}% Pagado`;
-}
-
-/**
- * Retorna el ícono SVG para el indicador de estado de pago
- */
-export function getPaymentIcon(paymentStatus: PaymentStatus): string {
-  if (paymentStatus.is_fully_paid) {
-    return "✓";
-  }
-  
-  if (paymentStatus.percentage_paid === 0) {
-    return "○";
-  }
-  
-  return "◐";
 }
 
 /**

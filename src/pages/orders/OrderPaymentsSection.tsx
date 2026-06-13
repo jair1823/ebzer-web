@@ -1,4 +1,5 @@
 import React from "react";
+import { Plus, X } from "lucide-react";
 import type { TemporaryIncome } from "./types";
 import { formatCurrency } from "../../utils";
 
@@ -51,7 +52,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
                 {income.date ? new Date(income.date).toLocaleDateString('es-CR') : 'Sin fecha'}
               </p>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" data-invoice-exclude="true">
               {!income.isExisting && (
                 <button
                   type="button"
@@ -59,9 +60,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
                   className="text-danger hover:text-danger-hover p-1"
                   aria-label="Eliminar pago"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 6L18 18M6 18L18 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
+                  <X size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -69,7 +68,10 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
         ))}
 
         {/* Input row - always at the end */}
-        <div className="flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 bg-surface-elevated border-subtle">
+        <div
+          className="flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 bg-surface-elevated border-subtle"
+          data-invoice-exclude="true"
+        >
           <div className="flex-1">
             <input
               type="number"
@@ -102,9 +104,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
               className="rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white p-2 hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               aria-label="Agregar pago"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
+              <Plus size={16} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </div>

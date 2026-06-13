@@ -1,4 +1,5 @@
 import React from "react";
+import { Check, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import type { OrderStatusOption } from "../orders/types";
 import { orderStatusesService } from "../../services";
 import { StatusBadge } from "../../components";
@@ -86,11 +87,7 @@ export const OrderStatusesPage: React.FC = () => {
             onClick={openCreateModal}
             className="btn-base btn-secondary rounded-md text-sm px-4 py-2"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
-              <g className="stroke-slate-600" strokeLinecap="round" strokeWidth="3">
-                <path d="M12 19V5" /><path d="M19 12H5" />
-              </g>
-            </svg>
+            <Plus size={14} strokeWidth={2.5} aria-hidden="true" className="mr-1.5" />
             Agregar estado
           </button>
         )}
@@ -136,12 +133,14 @@ export const OrderStatusesPage: React.FC = () => {
                     <span className="text-xs text-tertiary font-mono">{status.name}</span>
                     {status.is_system_status && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-subtle px-2 py-0.5 text-xs text-secondary font-medium">
-                        🔒 Sistema
+                        <Lock size={12} strokeWidth={2} aria-hidden="true" />
+                        Sistema
                       </span>
                     )}
                     {status.is_final_status && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-subtle px-2 py-0.5 text-xs text-secondary font-medium">
-                        ✓ Final
+                        <Check size={12} strokeWidth={2} aria-hidden="true" />
+                        Final
                       </span>
                     )}
                     {!status.is_active && (
@@ -166,10 +165,7 @@ export const OrderStatusesPage: React.FC = () => {
                       onClick={() => openEditModal(status)}
                       className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
+                      <Pencil size={14} strokeWidth={2} aria-hidden="true" />
                     </button>
                     <button
                       type="button"
@@ -178,11 +174,7 @@ export const OrderStatusesPage: React.FC = () => {
                       onClick={() => handleDeactivate(status)}
                       className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                      </svg>
+                      <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
                     </button>
                   </div>
                 )}

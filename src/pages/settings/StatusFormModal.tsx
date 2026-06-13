@@ -1,4 +1,5 @@
 import React from "react";
+import { X } from "lucide-react";
 import type { OrderStatusOption } from "../orders/types";
 import type { CreateOrderStatusData, UpdateOrderStatusData } from "../../services";
 import { orderStatusesService } from "../../services";
@@ -121,7 +122,7 @@ export const StatusFormModal: React.FC<StatusFormModalProps> = ({
               className="rounded-full border p-1.5 border-subtle text-secondary hover:bg-surface-elevated transition-colors"
               aria-label="Cerrar"
             >
-              ✕
+              <X size={16} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
 
