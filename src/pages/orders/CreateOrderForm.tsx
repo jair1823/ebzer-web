@@ -26,7 +26,7 @@ const getTodayLocalDate = (): string => {
 const initialFormData: OrderFormData = {
   description: "",
   amount_charged: 0,
-  status: "confirmed", // default status per backend
+  status: "new", // default status per backend
   estimated_delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // default 4 days from now - yyyy-MM-dd
   delivery_type: "shipping",
   client_name: "",
@@ -273,7 +273,7 @@ export const CreateOrderForm: React.FC<{
       setFormData({
         description: selectedOrder.description || "",
         amount_charged: selectedOrder.amount_charged || 0,
-        status: selectedOrder.status || "confirmed",
+        status: selectedOrder.status || "new",
         estimated_delivery_date: selectedOrder.estimated_delivery_date
           ? new Date(selectedOrder.estimated_delivery_date)
               .toISOString()
@@ -291,7 +291,7 @@ export const CreateOrderForm: React.FC<{
       const originalData = {
         description: selectedOrder.description || "",
         amount_charged: selectedOrder.amount_charged || 0,
-        status: selectedOrder.status || "confirmed",
+        status: selectedOrder.status || "new",
         estimated_delivery_date: selectedOrder.estimated_delivery_date
           ? new Date(selectedOrder.estimated_delivery_date)
               .toISOString()
@@ -368,9 +368,6 @@ export const CreateOrderForm: React.FC<{
               <div className="border-b px-6 py-5 backdrop-blur sm:px-8 bg-surface border-default">
                 <div className="flex items-start justify-between gap-6">
                   <div className="max-w-2xl">
-                    <p className="text-brand-primary mb-2 text-xs font-semibold uppercase tracking-[0.22em]">
-                      Gestión de encargos
-                    </p>
                     <h2 className="text-2xl font-semibold tracking-tight text-primary">
                       {summaryTitle}
                     </h2>
@@ -504,20 +501,27 @@ export const CreateOrderForm: React.FC<{
                               >
                                 Estado del pedido
                               </label>
-                              <select
-                                id="status"
-                                name="status"
-                                value={formData.status}
-                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as OrderStatus }))}
-                                className="input-base"
-                              >
-                                <option value="confirmed">Confirmado</option>
-                                <option value="in_progress">En progreso</option>
-                                <option value="ready">Listo</option>
-                                <option value="shipped">Enviado</option>
-                                <option value="delivered">Entregado</option>
-                                <option value="cancelled">Cancelado</option>
-                              </select>
+                              {formData.status === 'completed' ? (
+                                <div className="flex items-center gap-2 rounded-xl border px-4 py-2.5 bg-surface border-default">
+                                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${statusColor}`}>
+                                    ✓ {statusLabel}
+                                  </span>
+                                  <span className="text-xs text-tertiary">(Pedido finalizado)</span>
+                                </div>
+                              ) : (
+                                <select
+                                  id="status"
+                                  name="status"
+                                  value={formData.status}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as OrderStatus }))}
+                                  className="input-base"
+                                >
+                                  <option value="new">Nuevo</option>
+                                  <option value="active">En progreso</option>
+                                  <option value="ready">Listo</option>
+                                  <option value="cancelled" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>Cancelado</option>
+                                </select>
+                              )}
                             </div>
                           )}
                         </div>
@@ -674,7 +678,7 @@ export const CreateOrderForm: React.FC<{
                       Cancelar
                     </button>
 
-                    {selectedOrder && (
+                    {selectedOrder && selectedOrder.status !== 'completed' && (
                       <button
                         type="button"
                         className="btn-base btn-danger justify-center rounded-xl"

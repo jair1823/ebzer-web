@@ -71,3 +71,33 @@ export default defineConfig([
   },
 ])
 ```
+
+---
+
+## 🤖 Agentes Especializados
+
+Este proyecto cuenta con agentes de IA especializados para tareas específicas. Ver [AGENTS.md](./AGENTS.md) para detalles completos.
+
+### Agentes Disponibles
+
+- **ebzer-web**: Auditoría frontend (arquitectura, dominio, mantenibilidad, seguridad)
+- **ebzer-filtros**: Implementación del sistema de filtros para pedidos (3 fases)
+
+### Cómo Usar
+
+```
+@workspace invoca el agente ebzer-filtros para comenzar la implementación
+```
+
+Ver documentación completa en [AGENTS.md](./AGENTS.md).
+
+---
+
+## 📚 Documentación
+
+- [Arquitectura](./docs/arquitectura.md) - Estructura del proyecto
+- [Tecnologías](./docs/tecnologias.md) - Stack tecnológico  
+- [Sistema de Color](./docs/design-tokens.md) - Tokens semánticos
+- [Plan de Filtros](./docs/plan-filtros-pedidos.md) - Sistema de filtros (3 fases)
+
+Ver más en [docs/README.md](./docs/README.md).

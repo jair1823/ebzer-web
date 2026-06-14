@@ -1,9 +1,12 @@
 import React from "react";
 import { OrdersHeader } from "./OrdersHeader";
 import { OrdersTable } from "./OrdersTable";
-import type { Order, OrderFilters } from "./types";
+import { OrdersMetrics } from "./OrdersMetrics";
+import { QuickFilters } from "./QuickFilters";
+import type { Order, OrderFilters, QuickFilterType } from "./types";
 
 import { useOrders } from "../../hooks";
+import type { OrderFilters as ServiceOrderFilters } from "../../services";
 
 export const OrdersPage: React.FC = () => {
   const {
@@ -15,13 +18,18 @@ export const OrdersPage: React.FC = () => {
     updateOrder,
     finishOrder,
     paymentStatuses,
+    filters: serviceFilters,
+    setFilters: setServiceFilters,
+    clearFilters,
   } = useOrders();
   const [isOpen, setIsOpen] = React.useState(false);
   const [filters, setFilters] = React.useState<OrderFilters>({
     dateFrom: null,
     dateTo: null,
     statuses: [],
+    hideCancelled: true,
   });
+  const [activeQuickFilter, setActiveQuickFilter] = React.useState<QuickFilterType>("this-month");
 
   const toggleModal = () => {
     setIsOpen(!isOpen);
@@ -37,8 +45,45 @@ export const OrdersPage: React.FC = () => {
     toggleModal();
   };
 
+  const handleQuickFilterChange = (filterType: QuickFilterType, newFilters: ServiceOrderFilters) => {
+    setActiveQuickFilter(filterType);
+    
+    if (filterType === "all") {
+      clearFilters();
+    } else if (filterType === "pending-payment") {
+      // For pending payment, we need to filter client-side since it's based on payment status
+      // We'll apply default month filter to backend and then filter client-side
+      setServiceFilters({
+        dateFrom: serviceFilters.dateFrom,
+        dateTo: serviceFilters.dateTo,
+      });
+    } else {
+      setServiceFilters(newFilters);
+    }
+  };
+
+  const handleToggleHistory = () => {
+    if (activeQuickFilter === "all") {
+      // Si ya está en "all", volver a "this-month"
+      const defaultRange = { dateFrom: serviceFilters.dateFrom, dateTo: serviceFilters.dateTo };
+      setActiveQuickFilter("this-month");
+      setServiceFilters(defaultRange);
+    } else {
+      // Mostrar todo el historial
+      setActiveQuickFilter("all");
+      clearFilters();
+    }
+  };
+
+  const isShowingFullHistory = activeQuickFilter === "all";
+
   const applyFilters = (orders: Order[]): Order[] => {
-    return orders.filter((order) => {
+    let filtered = orders.filter((order) => {
+      // Hide cancelled orders if the filter is active
+      if (filters.hideCancelled && order.status === "cancelled") {
+        return false;
+      }
+
       // Filter by date range (using estimated_delivery_date)
       if (filters.dateFrom && order.estimated_delivery_date) {
         const orderDate = new Date(order.estimated_delivery_date);
@@ -59,6 +104,16 @@ export const OrdersPage: React.FC = () => {
 
       return true;
     });
+
+    // Additional client-side filter for pending payment
+    if (activeQuickFilter === "pending-payment") {
+      filtered = filtered.filter((order) => {
+        const paymentStatus = paymentStatuses.get(order.id);
+        return paymentStatus && !paymentStatus.is_fully_paid;
+      });
+    }
+
+    return filtered;
   };
 
   const filteredOrders = applyFilters(orders);
@@ -75,7 +130,23 @@ export const OrdersPage: React.FC = () => {
         toggleModal={toggleModal}
         selectedOrder={selectedOrder}
         finishOrder={finishOrder}
+        onToggleHistory={handleToggleHistory}
+        isShowingFullHistory={isShowingFullHistory}
+        activeQuickFilter={activeQuickFilter}
       />
+      
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <QuickFilters
+          activeFilter={activeQuickFilter}
+          onFilterChange={handleQuickFilterChange}
+        />
+
+        <OrdersMetrics
+          orders={filteredOrders}
+          paymentStatuses={paymentStatuses}
+        />
+      </div>
+
       <OrdersTable
         orders={filteredOrders}
         loading={loading}

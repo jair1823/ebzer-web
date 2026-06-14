@@ -1,12 +1,33 @@
 import { api } from "./api";
 import type { PaymentStatus } from "../pages/orders/types";
 
+export interface OrderFilters {
+  dateFrom?: string;
+  dateTo?: string;
+  status?: string;
+}
+
 export const ordersService = {
   createOrder: async (orderData: any) => {
     return api.post("/orders", orderData);
   },
-  getAllOrders: async () => {
-    return api.get("/orders");
+  getAllOrders: async (filters?: OrderFilters) => {
+    const params = new URLSearchParams();
+    
+    if (filters?.dateFrom) {
+      params.append("from", filters.dateFrom);
+    }
+    if (filters?.dateTo) {
+      params.append("to", filters.dateTo);
+    }
+    if (filters?.status) {
+      params.append("status", filters.status);
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/orders?${queryString}` : "/orders";
+    
+    return api.get(url);
   },
   getOrderById: async (orderId: string) => {
     return api.get(`/orders/${orderId}`);

@@ -1,12 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
-import { ordersService } from "../services";
+import { ordersService, type OrderFilters } from "../services";
 import type { Order, OrderFormData, PaymentStatus } from "../pages/orders/types";
+import { getLast30DaysRange } from "../utils";
 
 export const useOrders = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [paymentStatuses, setPaymentStatuses] = useState<Map<number, PaymentStatus>>(new Map());
+  const [filters, setFilters] = useState<OrderFilters>(() => {
+    const defaultRange = getLast30DaysRange();
+    return {
+      dateFrom: defaultRange.from,
+      dateTo: defaultRange.to,
+    };
+  });
 
   const createOrder = async (orderData: OrderFormData) => {
     const response = await ordersService.createOrder(orderData);
@@ -14,10 +22,11 @@ export const useOrders = () => {
     return response;
   };
 
-  const getAllOrders = useCallback(async () => {
+  const getAllOrders = useCallback(async (customFilters?: OrderFilters) => {
     setLoading(true);
     try {
-      const response = await ordersService.getAllOrders();
+      const filtersToUse = customFilters || filters;
+      const response = await ordersService.getAllOrders(filtersToUse);
       setOrders(response);
       
       // Cargar payment statuses para todas las órdenes
@@ -30,7 +39,7 @@ export const useOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters]);
 
   const loadPaymentStatuses = async (ordersList: Order[]) => {
     try {
@@ -85,6 +94,16 @@ export const useOrders = () => {
     return paymentStatuses.get(orderId) || null;
   };
 
+  const clearFilters = () => {
+    setFilters({});
+    getAllOrders({});
+  };
+
+  const applyFilters = (newFilters: OrderFilters) => {
+    setFilters(newFilters);
+    getAllOrders(newFilters);
+  };
+
   useEffect(() => {
     getAllOrders();
   }, [getAllOrders]);
@@ -100,5 +119,8 @@ export const useOrders = () => {
     setSelectedOrder,
     paymentStatuses,
     getPaymentStatusForOrder,
+    filters,
+    setFilters: applyFilters,
+    clearFilters,
   };
 };

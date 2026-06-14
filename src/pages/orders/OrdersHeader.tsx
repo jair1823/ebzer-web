@@ -1,13 +1,12 @@
 import React from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
-import type { Order, OrderFormData, OrderFilters, OrderStatus } from "./types";
+import type { Order, OrderFormData, OrderFilters, OrderStatus, QuickFilterType } from "./types";
 
 const statusOptions: { value: OrderStatus; label: string; colorClass: string; textClass: string }[] = [
-  { value: "confirmed", label: "Confirmado", colorClass: "bg-info", textClass: "text-white" },
-  { value: "in_progress", label: "En progreso", colorClass: "bg-warning", textClass: "text-white" },
+  { value: "new", label: "Nuevo", colorClass: "bg-info", textClass: "text-white" },
+  { value: "active", label: "En progreso", colorClass: "bg-warning", textClass: "text-white" },
   { value: "ready", label: "Listo", colorClass: "bg-success", textClass: "text-white" },
-  { value: "shipped", label: "Enviado", colorClass: "bg-accent", textClass: "text-white" },
-  { value: "delivered", label: "Entregado", colorClass: "bg-secondary", textClass: "text-primary" },
+  { value: "completed", label: "Entregado", colorClass: "bg-muted", textClass: "text-white" },
   { value: "cancelled", label: "Cancelado", colorClass: "bg-danger", textClass: "text-white" },
 ];
 
@@ -21,7 +20,23 @@ export const OrdersHeader: React.FC<{
   toggleModal: () => void;
   openCreateOrder: () => void;
   finishOrder: (orderId: number) => void;
-}> = ({ filters, setFilters, createOrder, updateOrder, isOpen, toggleModal, selectedOrder, openCreateOrder, finishOrder }) => {
+  onToggleHistory: () => void;
+  isShowingFullHistory: boolean;
+  activeQuickFilter: QuickFilterType;
+}> = ({ 
+  filters, 
+  setFilters, 
+  createOrder, 
+  updateOrder, 
+  isOpen, 
+  toggleModal, 
+  selectedOrder, 
+  openCreateOrder, 
+  finishOrder,
+  onToggleHistory,
+  isShowingFullHistory,
+  activeQuickFilter,
+}) => {
   
   const [showFilters, setShowFilters] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
@@ -57,6 +72,7 @@ export const OrdersHeader: React.FC<{
       dateFrom: null,
       dateTo: null,
       statuses: [],
+      hideCancelled: true, // Always keep this active
     });
   };
 
@@ -72,6 +88,13 @@ export const OrdersHeader: React.FC<{
     return filters.dateFrom !== null || 
            filters.dateTo !== null || 
            filters.statuses.length > 0;
+  };
+
+  const handleToggleHideCancelled = () => {
+    setFilters((prev) => ({
+      ...prev,
+      hideCancelled: !prev.hideCancelled,
+    }));
   };
 
   // Close filters dropdown when clicking outside
@@ -101,6 +124,38 @@ export const OrdersHeader: React.FC<{
         {/* Botones de acción inline */}
         <div className="flex items-center gap-2">
           
+          {/* Toggle de Historial */}
+          <button
+            type="button"
+            className={`btn-base rounded-md text-xs px-3 py-1.5 ${
+              isShowingFullHistory ? "btn-primary" : "btn-outline"
+            }`}
+            onClick={onToggleHistory}
+            aria-label={isShowingFullHistory ? "Ver recientes" : "Ver historial completo"}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mr-1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {isShowingFullHistory ? "Ver Recientes" : "Historial"}
+          </button>
+
+          {/* Indicador visual de filtro activo */}
+          {activeQuickFilter !== "all" && activeQuickFilter !== "this-month" && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-info-soft rounded-full text-xs font-medium text-info-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-info animate-pulse" />
+              Filtro activo
+            </div>
+          )}
+
           {/* Botón Filtros con dropdown */}
           <div className="relative" ref={filterRef}>
             <button
@@ -193,6 +248,21 @@ export const OrdersHeader: React.FC<{
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Ocultar cancelados */}
+                  <div className="pt-3 border-t border-subtle">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.hideCancelled}
+                        onChange={handleToggleHideCancelled}
+                        className="w-4 h-4 rounded border-subtle text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+                      />
+                      <span className="text-xs font-medium text-secondary">
+                        Ocultar pedidos cancelados
+                      </span>
+                    </label>
                   </div>
 
                 </div>

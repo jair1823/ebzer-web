@@ -5,11 +5,10 @@ import type { OrderStatus } from "../pages/orders/types";
  */
 export const getStatusLabel = (status: OrderStatus): string => {
   const labels: Record<OrderStatus, string> = {
-    confirmed: "Confirmado",
-    in_progress: "En progreso",
+    new: "Nuevo",
+    active: "En progreso",
     ready: "Listo",
-    shipped: "Enviado",
-    delivered: "Entregado",
+    completed: "Entregado",
     cancelled: "Cancelado",
   };
   return labels[status];
@@ -21,16 +20,14 @@ export const getStatusLabel = (status: OrderStatus): string => {
  */
 export const getStatusColor = (status: OrderStatus): string => {
   switch (status) {
-    case "confirmed":
-      return "bg-info"; // azul - confirmado
-    case "in_progress":
-      return "bg-warning"; // amarillo - en progreso
+    case "new":
+      return "bg-info"; // azul - orden nueva/confirmada
+    case "active":
+      return "bg-warning"; // amarillo - en progreso/producción
     case "ready":
-      return "bg-success"; // verde - listo
-    case "shipped":
-      return "bg-accent"; // cyan - enviado
-    case "delivered":
-      return "bg-muted"; // gris neutro - entregado (menos llamativo)
+      return "bg-success"; // verde - listo para entrega
+    case "completed":
+      return "bg-muted"; // gris neutro - entregado/completado
     case "cancelled":
       return "bg-danger"; // rojo - cancelado
     default:

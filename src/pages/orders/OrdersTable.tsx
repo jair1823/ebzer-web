@@ -124,7 +124,7 @@ export const OrdersTable: React.FC<{
                     {formatOrderId(order.id)}
                   </td>
                   <td className="text-sm">
-                    {order.status !== "delivered" && order.status !== "cancelled" && (
+                    {order.status !== "completed" && order.status !== "cancelled" && (
                       <button
                         className="btn-base btn-accent rounded-md px-3 py-1 text-xs"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

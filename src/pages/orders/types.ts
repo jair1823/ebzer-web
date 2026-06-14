@@ -1,11 +1,10 @@
 export type DeliveryType = "pickup" | "shipping" | "delivery";
 export type OrderStatus = 
-  | "confirmed" 
-  | "in_progress" 
-  | "ready" 
-  | "shipped" 
-  | "delivered" 
-  | "cancelled";
+  | "new"       // Orden confirmada, pendiente de iniciar
+  | "active"    // En producción
+  | "ready"     // Lista para entrega/retiro
+  | "completed" // Entregada al cliente
+  | "cancelled"; // Cancelada
 
 export interface OrderFormData {
   description: string;
@@ -41,10 +40,18 @@ export interface PaymentStatus {
   is_fully_paid: boolean;
 }
 
+export type QuickFilterType = 
+  | "all" 
+  | "active" 
+  | "pending-payment" 
+  | "this-week" 
+  | "this-month";
+
 export interface OrderFilters {
   dateFrom: string | null;  // ISO date string (yyyy-MM-dd) or null
   dateTo: string | null;    // ISO date string (yyyy-MM-dd) or null
   statuses: OrderStatus[];  // Array of selected statuses, empty = show all
+  hideCancelled: boolean;   // Hide cancelled orders (active by default)
 }
 
 // Interface for temporary incomes (before saving to backend)
