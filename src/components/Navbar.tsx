@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   CalendarDays,
   ChartColumn,
+  CircleDollarSign,
   Menu,
   Package,
   Settings,
@@ -9,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { canManageOrderStatuses, canManageUsers, useAuth } from "../auth";
+import { canManageIncomes, canManageOrderStatuses, canManageUsers, useAuth } from "../auth";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,6 +25,7 @@ export const Navbar: React.FC = () => {
   const allNavItems = [
     { path: "/orders", label: "Pedidos", Icon: Package, adminOnly: false },
     { path: "/agenda", label: "Agenda", Icon: CalendarDays, adminOnly: false },
+    { path: "/incomes", label: "Ingresos", Icon: CircleDollarSign, canShow: canManageIncomes },
     { path: "/expenses", label: "Gastos", Icon: ChartColumn, adminOnly: false },
     { path: "/settings/statuses", label: "Estados", Icon: Settings, canShow: canManageOrderStatuses },
     { path: "/settings/users", label: "Usuarios", Icon: Users, canShow: canManageUsers },

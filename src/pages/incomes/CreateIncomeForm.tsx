@@ -4,10 +4,11 @@ import React, {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import type { IncomeFormData, Income } from "./types";
 import { Toast } from "../../components";
 import { useToast } from "../../hooks";
+import { isoDateStringToLocalDate } from "../../utils/date";
 
 const initialFormData: IncomeFormData = {
   order_id: 0,
@@ -22,20 +23,31 @@ const formatAmountPreview = (value: number) =>
     minimumFractionDigits: 2,
   }).format(Number(value) || 0);
 
+const formatDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export const CreateIncomeForm: React.FC<{
   isOpen: boolean;
   selectedIncome?: Income | null;
   createIncome: (data: IncomeFormData) => Promise<unknown>;
   updateIncome: (incomeId: number, data: IncomeFormData) => Promise<unknown>;
+  onDeleteIncome: (income: Income) => void;
   toggleModal: () => void;
   openCreateIncome: () => void;
+  canDelete: boolean;
 }> = ({
   isOpen = false,
   selectedIncome,
   createIncome,
   updateIncome,
+  onDeleteIncome,
   toggleModal,
   openCreateIncome,
+  canDelete,
 }) => {
   const [formData, setFormData] = useState<IncomeFormData>(initialFormData);
   const {
@@ -90,12 +102,11 @@ export const CreateIncomeForm: React.FC<{
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     if (selectedIncome) {
+      const paymentDate = isoDateStringToLocalDate(selectedIncome.date);
       setFormData({
         order_id: selectedIncome.order_id,
         amount: selectedIncome.amount,
-        date: selectedIncome.date
-          ? new Date(selectedIncome.date).toISOString().split("T")[0]
-          : null,
+        date: paymentDate ? formatDateInputValue(paymentDate) : null,
       });
     } else {
       setFormData(initialFormData);
@@ -241,21 +252,36 @@ export const CreateIncomeForm: React.FC<{
               </div>
 
               <div className="border-t px-6 py-4 sm:px-8 bg-surface border-default">
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={toggleModal}
-                    className="btn-base btn-outline rounded-md"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!isFormValid}
-                    className="btn-base btn-primary rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {selectedIncome ? "Actualizar ingreso" : "Registrar ingreso"}
-                  </button>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    {selectedIncome && canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteIncome(selectedIncome)}
+                        className="btn-base btn-danger rounded-md"
+                      >
+                        <Trash2 size={14} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
+                        Eliminar ingreso
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleModal}
+                      className="btn-base btn-outline rounded-md"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!isFormValid}
+                      className="btn-base btn-primary rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {selectedIncome ? "Actualizar ingreso" : "Registrar ingreso"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </form>

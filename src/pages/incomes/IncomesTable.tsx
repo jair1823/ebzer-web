@@ -1,5 +1,7 @@
 import React from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import type { Income } from "./types";
+import { isoDateStringToLocalDate } from "../../utils/date";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-CR", {
@@ -9,13 +11,13 @@ const formatCurrency = (value: number) =>
   }).format(value);
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+  const date = isoDateStringToLocalDate(dateString);
+  if (!date) return "";
+
   return new Intl.DateTimeFormat("es-CR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(date);
 };
 
@@ -23,8 +25,9 @@ export const IncomesTable: React.FC<{
   incomes: Income[];
   loading: boolean;
   onSelectIncome: (income: Income) => void;
-  canWrite: boolean;
-}> = ({ incomes, loading, onSelectIncome, canWrite }) => {
+  onDeleteIncome: (income: Income) => void;
+  canManage: boolean;
+}> = ({ incomes, loading, onSelectIncome, onDeleteIncome, canManage }) => {
   if (loading) {
     return (
       <div className="overflow-hidden rounded-xl shadow-sm surface-card">
@@ -89,8 +92,8 @@ export const IncomesTable: React.FC<{
             {incomes.map((income) => (
               <tr
                 key={income.id}
-                className={canWrite ? "transition-colors hover:bg-surface-hover cursor-pointer" : ""}
-                onClick={canWrite ? () => onSelectIncome(income) : undefined}
+                className={canManage ? "transition-colors hover:bg-surface-hover cursor-pointer" : ""}
+                onClick={canManage ? () => onSelectIncome(income) : undefined}
               >
                 <td className="whitespace-nowrap px-6 py-4">
                   <span className="text-sm font-medium text-primary">
@@ -113,16 +116,33 @@ export const IncomesTable: React.FC<{
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                  {canWrite && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectIncome(income);
-                      }}
-                      className="text-brand-primary hover:text-brand-primary-hover font-medium"
-                    >
-                      Ver detalles
-                    </button>
+                  {canManage && (
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        title="Editar ingreso"
+                        aria-label={`Editar ingreso #${income.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectIncome(income);
+                        }}
+                        className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-primary transition-colors"
+                      >
+                        <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Eliminar ingreso"
+                        aria-label={`Eliminar ingreso #${income.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteIncome(income);
+                        }}
+                        className="rounded-md p-1.5 text-secondary hover:bg-surface-elevated hover:text-danger transition-colors"
+                      >
+                        <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
