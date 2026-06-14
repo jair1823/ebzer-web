@@ -8,4 +8,8 @@ export const canManageOrderStatuses = (role: Role): boolean => role === "admin";
 
 export const canManageIncomes = (role: Role): boolean => role === "admin";
 
+export const canManageExpenses = (role: Role): boolean => role === "admin";
+
+export const canManageExpenseCatalog = (role: Role): boolean => role === "admin";
+
 export const canWriteBusinessRecords = (role: Role): boolean => role !== "guest";
