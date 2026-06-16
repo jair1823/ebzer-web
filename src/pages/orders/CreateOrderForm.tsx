@@ -19,9 +19,11 @@ import type {
 import type { Income } from "../incomes/types";
 import { ConfirmModal, PaymentBadgeContent, Toast, StatusPicker } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
-import { incomesService, ordersService } from "../../services";
+import { auditService, incomesService, ordersService } from "../../services";
 import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses } from "../../utils";
 import { OrderPaymentsSection } from "./OrderPaymentsSection";
+import { useAuth } from "../../auth";
+import type { AuditEvent } from "../../services/audit.service";
 
 // Helper to get today's date in YYYY-MM-DD format (local timezone)
 const getTodayLocalDate = (): string => {
@@ -77,6 +79,7 @@ const platformOptions: Array<{ value: OrderPlatform; label: string }> = [
 export const CreateOrderForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedOrderPaymentStatus, setSelectedOrderPaymentStatus] =
     useState<PaymentStatus | null>(null);
@@ -90,6 +93,8 @@ export const CreateOrderForm: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const allowNavigationRef = React.useRef(false);
   const invoiceCaptureRef = React.useRef<HTMLDivElement | null>(null);
   
@@ -397,6 +402,8 @@ export const CreateOrderForm: React.FC = () => {
       setNewIncomeDate(getTodayLocalDate());
       setOriginalFormData(freshInitialData);
       setOriginalIncomes([]);
+      setAuditEvents([]);
+      setIsLoadingAudit(false);
       setLoadError(null);
       setIsLoadingOrder(false);
     };
@@ -430,6 +437,23 @@ export const CreateOrderForm: React.FC = () => {
         setOriginalFormData(loadedFormData);
         setIncomes(loadedIncomes);
         setOriginalIncomes(loadedIncomes);
+        if (user?.role === "admin") {
+          setIsLoadingAudit(true);
+          auditService
+            .getEvents({ entity_type: "orders", entity_id: order.id })
+            .then((events) => {
+              if (!isCancelled) setAuditEvents(events);
+            })
+            .catch((error) => {
+              console.error("Error loading audit events:", error);
+              if (!isCancelled) setAuditEvents([]);
+            })
+            .finally(() => {
+              if (!isCancelled) setIsLoadingAudit(false);
+            });
+        } else {
+          setAuditEvents([]);
+        }
       } catch (error) {
         console.error("Error loading order:", error);
         if (!isCancelled) {
@@ -448,7 +472,7 @@ export const CreateOrderForm: React.FC = () => {
       isCancelled = true;
     };
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [id]);
+  }, [id, user?.role]);
 
   const isFormValid = validateForm();
   const hasChanges = hasUnsavedChanges();
@@ -862,6 +886,42 @@ export const CreateOrderForm: React.FC = () => {
                         onRemoveIncome={handleRemoveIncome}
                       />
                     </div>
+
+                    {selectedOrder && user?.role === "admin" && (
+                      <section className="overflow-hidden rounded-3xl border border-default bg-surface shadow-sm">
+                        <div className="border-b border-default px-5 py-3">
+                          <h3 className="text-sm font-semibold text-primary">Historial</h3>
+                        </div>
+                        <div className="max-h-72 overflow-y-auto">
+                          {isLoadingAudit ? (
+                            <p className="px-5 py-4 text-sm text-secondary">Cargando historial...</p>
+                          ) : auditEvents.length === 0 ? (
+                            <p className="px-5 py-4 text-sm text-secondary">Sin eventos registrados</p>
+                          ) : (
+                            <div className="divide-y divide-[rgb(var(--border-subtle))]">
+                              {auditEvents.map((event) => (
+                                <div key={event.id} className="px-5 py-3">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <p className="text-sm font-medium text-primary">
+                                      {event.summary ?? event.action}
+                                    </p>
+                                    <time className="shrink-0 text-xs text-tertiary">
+                                      {new Intl.DateTimeFormat("es-CR", {
+                                        dateStyle: "short",
+                                        timeStyle: "short",
+                                      }).format(new Date(event.created_at))}
+                                    </time>
+                                  </div>
+                                  <p className="mt-1 text-xs text-secondary">
+                                    {event.actor_username ?? "Sistema"}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                    )}
                   </aside>
                 </div>
               </div>

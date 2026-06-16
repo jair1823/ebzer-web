@@ -76,6 +76,12 @@ export interface OrderFilters {
   dateFrom: string | null;  // ISO date string (yyyy-MM-dd) or null
   dateTo: string | null;    // ISO date string (yyyy-MM-dd) or null
   status_ids: number[];     // Array of selected status IDs, empty = show all
+  search: string;
+  platform: OrderPlatform | "";
+  payment_status: "unpaid" | "partial" | "paid" | "";
+  overdue: boolean;
+  amount_min: string;
+  amount_max: string;
 }
 
 // Interface for temporary incomes (before saving to backend)

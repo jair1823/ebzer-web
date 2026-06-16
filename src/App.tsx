@@ -1,6 +1,6 @@
 import "./App.css";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
-import { AgendaPage, ExpensesPage, IncomesPage, OrderStatusesPage, OrdersPage } from "./pages";
+import { AgendaPage, ExpensesPage, IncomesPage, InsightsPage, OrderStatusesPage, OrdersPage } from "./pages";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { ThemeToggle } from "./components";
 import { ProtectedRoute, RequireRole } from "./auth";
@@ -39,6 +39,10 @@ const router = createBrowserRouter([
           {
             path: "agenda",
             element: <AgendaPage />,
+          },
+          {
+            path: "insights",
+            element: <InsightsPage />,
           },
           {
             path: "incomes",
