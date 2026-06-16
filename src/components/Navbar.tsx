@@ -62,9 +62,18 @@ export const Navbar: React.FC = () => {
           {/* Left: branding + desktop nav */}
           <div className="flex items-center gap-6 lg:gap-8">
             <div className="flex shrink-0 items-center">
-              <h1 className="text-brand-primary font-mono text-base font-bold tracking-tight lg:text-lg">
-                <span className="hidden sm:inline">Creaciones </span>Eben-Ezer
-              </h1>
+              <NavLink
+                to="/orders"
+                className="block h-10 w-32 overflow-hidden rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus-ring sm:w-36"
+                aria-label="Ir a Pedidos"
+              >
+                <img
+                  src="/navbarlog.png"
+                  alt="Creaciones Eben-Ezer"
+                  className="h-full w-full object-cover object-center"
+                  style={{ paddingTop: "10px" }}
+                />
+              </NavLink>
             </div>
 
             <div className="hidden items-center gap-1 md:flex" role="navigation">
