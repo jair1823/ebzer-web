@@ -17,6 +17,7 @@ export const useExpenses = (filters: ExpenseFilters = {}) => {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
 
   const getAllExpenses = useCallback(async () => {
     setLoading(true);
@@ -45,6 +46,7 @@ export const useExpenses = (filters: ExpenseFilters = {}) => {
       return [];
     } finally {
       setCatalogLoading(false);
+      setCatalogLoaded(true);
     }
   }, []);
 
@@ -139,6 +141,7 @@ export const useExpenses = (filters: ExpenseFilters = {}) => {
     products,
     loading,
     catalogLoading,
+    catalogLoaded,
     selectedExpense,
     setSelectedExpense,
     createExpense,

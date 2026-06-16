@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil, Plus, Store, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, Plus, Store, Trash2, X } from "lucide-react";
 import {
   canManageExpenseCatalog,
   canManageExpenses,
@@ -8,6 +8,7 @@ import {
 } from "../../auth";
 import { ConfirmModal, Toast } from "../../components";
 import { useConfirmModal, useExpenses, useToast } from "../../hooks";
+import { incomesService } from "../../services";
 import { isoDateStringToLocalDate } from "../../utils/date";
 import type {
   Comercio,
@@ -42,6 +43,18 @@ const formatDateInputValue = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+};
+
+const CATALOG_COLLAPSED_STORAGE_KEY = "ebzer.expenses.catalogCollapsed";
+
+const getStoredCatalogCollapsed = () => {
+  if (typeof window === "undefined") return false;
+
+  try {
+    return window.localStorage.getItem(CATALOG_COLLAPSED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
 };
 
 const getCurrentMonthRange = () => {
@@ -468,6 +481,8 @@ const CatalogManager: React.FC<{
   comercios: Comercio[];
   products: Product[];
   expenses: Expense[];
+  catalogLoading: boolean;
+  catalogLoaded: boolean;
   canManage: boolean;
   createComercio: (data: ComercioFormData) => Promise<unknown>;
   updateComercio: (comercioId: number, data: ComercioFormData) => Promise<unknown>;
@@ -481,6 +496,8 @@ const CatalogManager: React.FC<{
   comercios,
   products,
   expenses,
+  catalogLoading,
+  catalogLoaded,
   canManage,
   createComercio,
   updateComercio,
@@ -503,8 +520,15 @@ const CatalogManager: React.FC<{
   const [editingComercio, setEditingComercio] = React.useState<Comercio | null>(null);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isCatalogCollapsed, setIsCatalogCollapsed] = React.useState(getStoredCatalogCollapsed);
 
-  if (!canManage) return null;
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(CATALOG_COLLAPSED_STORAGE_KEY, String(isCatalogCollapsed));
+    } catch {
+      // Keep the UI usable when localStorage is unavailable.
+    }
+  }, [isCatalogCollapsed]);
 
   const comercioUsage = expenses.reduce<Record<number, number>>((totals, expense) => {
     totals[expense.comercio_id] = (totals[expense.comercio_id] ?? 0) + 1;
@@ -580,6 +604,8 @@ const CatalogManager: React.FC<{
     }
   };
 
+  if (!canManage) return null;
+
   return (
     <section className="overflow-hidden rounded-xl shadow-sm surface-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4 border-subtle">
@@ -587,9 +613,22 @@ const CatalogManager: React.FC<{
           <Store size={16} strokeWidth={2} aria-hidden="true" className="text-secondary" />
           <h2 className="text-base font-semibold text-primary">Comercios y productos</h2>
         </div>
+        <button
+          type="button"
+          onClick={() => setIsCatalogCollapsed((current) => !current)}
+          aria-expanded={!isCatalogCollapsed}
+          className="btn-base btn-outline rounded-md gap-2 px-3 py-1.5 text-xs"
+        >
+          {isCatalogCollapsed ? (
+            <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <ChevronDown size={14} strokeWidth={2} aria-hidden="true" />
+          )}
+          {isCatalogCollapsed ? "Mostrar" : "Ocultar"}
+        </button>
       </div>
 
-      <div className="grid gap-6 p-6 lg:grid-cols-2">
+      <div hidden={isCatalogCollapsed} className="grid gap-6 p-6 lg:grid-cols-2">
         <div className="space-y-4">
           <form onSubmit={handleComercioSubmit} className="grid gap-3">
             <div className="flex items-center justify-between gap-3">
@@ -680,7 +719,7 @@ const CatalogManager: React.FC<{
                     </td>
                   </tr>
                 ))}
-                {comercios.length === 0 && (
+                {catalogLoaded && !catalogLoading && comercios.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-3 py-6 text-center text-sm text-secondary">
                       No hay Comercios registrados
@@ -942,6 +981,8 @@ export const ExpensesPage: React.FC = () => {
     comercios,
     products,
     loading,
+    catalogLoading,
+    catalogLoaded,
     selectedExpense,
     setSelectedExpense,
     createExpense,
@@ -955,6 +996,8 @@ export const ExpensesPage: React.FC = () => {
     deleteProduct,
   } = useExpenses(filters);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [monthlyIncome, setMonthlyIncome] = React.useState(0);
+  const [isIncomeSummaryLoading, setIsIncomeSummaryLoading] = React.useState(false);
   const { isOpen: isConfirmOpen, config: confirmConfig, openConfirm, closeConfirm } = useConfirmModal();
   const { isVisible: isToastVisible, config: toastConfig, hideToast, showSuccess, showError } = useToast();
 
@@ -980,6 +1023,29 @@ export const ExpensesPage: React.FC = () => {
     });
     return [...totals.values()].sort((a, b) => b.total - a.total);
   }, [expenses]);
+  const comparisonBalance = monthlyIncome - monthlyTotal;
+  const expenseRatio = monthlyIncome > 0
+    ? Math.min((monthlyTotal / monthlyIncome) * 100, 100)
+    : monthlyTotal > 0
+      ? 100
+      : 0;
+
+  const loadMonthlyIncomes = React.useCallback(async () => {
+    setIsIncomeSummaryLoading(true);
+    try {
+      const incomes = await incomesService.getAllIncomes(filters);
+      setMonthlyIncome(incomes.reduce((sum, income) => sum + income.amount, 0));
+    } catch (error) {
+      console.error("Error fetching monthly incomes:", error);
+      setMonthlyIncome(0);
+    } finally {
+      setIsIncomeSummaryLoading(false);
+    }
+  }, [filters]);
+
+  React.useEffect(() => {
+    loadMonthlyIncomes();
+  }, [loadMonthlyIncomes]);
 
   const closeForm = () => {
     setSelectedExpense(null);
@@ -1068,7 +1134,7 @@ export const ExpensesPage: React.FC = () => {
           </div>
         </header>
 
-        <section className="grid gap-4 lg:grid-cols-[minmax(14rem,18rem)_1fr]">
+        <section className="grid gap-4 lg:grid-cols-[minmax(14rem,18rem)_1fr_minmax(18rem,24rem)]">
           <div className="rounded-xl p-5 shadow-sm surface-card">
             <p className="text-xs font-semibold uppercase text-secondary">Gastos del mes</p>
             <p className="mt-2 text-2xl font-semibold text-primary">
@@ -1097,12 +1163,49 @@ export const ExpensesPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          <div className="rounded-xl p-5 shadow-sm surface-card">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase text-secondary">Ingresos vs gastos</p>
+              {isIncomeSummaryLoading && (
+                <span className="text-xs text-secondary">Actualizando...</span>
+              )}
+            </div>
+            <div className="mt-3 grid gap-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-secondary">Ingresos</span>
+                <span className="font-semibold text-primary">{formatCurrency(monthlyIncome)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-secondary">Gastos</span>
+                <span className="font-semibold text-primary">{formatCurrency(monthlyTotal)}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-surface-elevated">
+                <div
+                  className="h-full rounded-full bg-warning"
+                  style={{ width: `${expenseRatio}%` }}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 border-t pt-2 border-subtle">
+                <span className="font-medium text-primary">
+                  {comparisonBalance >= 0 ? "Balance" : "Por cubrir"}
+                </span>
+                <span className={`font-semibold ${comparisonBalance >= 0 ? "text-brand-secondary" : "text-danger"}`}>
+                  {formatCurrency(Math.abs(comparisonBalance))}
+                </span>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {comercios.length === 0 && (
-          <div className="rounded-xl p-5 text-sm shadow-sm surface-card">
-            <p className="font-medium text-primary">No hay Comercios registrados.</p>
-            <p className="mt-1 text-secondary">
+        {catalogLoaded && !catalogLoading && comercios.length === 0 && (
+          <div
+            className="rounded-xl border p-5 text-sm shadow-sm bg-warning-soft"
+            style={{ borderColor: "rgb(var(--warning))" }}
+          >
+            <p className="font-semibold text-warning">No hay Comercios registrados.</p>
+            <p className="mt-1 text-warning">
               {manageCatalogAllowed
                 ? "Crea un Comercio para habilitar el registro de gastos."
                 : "Un administrador debe crear un Comercio antes de registrar gastos."}
@@ -1114,6 +1217,8 @@ export const ExpensesPage: React.FC = () => {
           comercios={comercios}
           products={products}
           expenses={expenses}
+          catalogLoading={catalogLoading}
+          catalogLoaded={catalogLoaded}
           canManage={manageCatalogAllowed}
           createComercio={createComercio}
           updateComercio={updateComercio}
