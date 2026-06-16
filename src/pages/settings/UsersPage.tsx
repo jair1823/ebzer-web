@@ -232,7 +232,7 @@ export const UsersPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-subtle">
-              <thead className="bg-primary-soft">
+              <thead className="table-header">
                 <tr>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-secondary">Usuario</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-secondary">Rol</th>
@@ -241,7 +241,7 @@ export const UsersPage: React.FC = () => {
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-secondary">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-subtle bg-surface">
+              <tbody className="table-body divide-y divide-subtle">
                 {users.map((user) => (
                   <tr key={user.id}>
                     <td className="px-5 py-4">

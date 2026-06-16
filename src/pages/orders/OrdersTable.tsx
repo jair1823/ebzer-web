@@ -53,7 +53,7 @@ export const OrdersTable: React.FC<{
     <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
       <div className="mt-2 overflow-hidden rounded-xl shadow-sm surface-card">
         <table className="min-w-full">
-          <thead className="bg-primary-soft">
+          <thead className="table-header">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-secondary">
                 Pedido
@@ -102,7 +102,7 @@ export const OrdersTable: React.FC<{
               </tr>
             </tbody>
           ) : (
-            <tbody className="bg-surface">
+            <tbody className="table-body">
               {orders.map((order) => (
                 <tr
                   key={order.id}

@@ -541,7 +541,7 @@ export const CreateOrderForm: React.FC = () => {
         onSubmit={handleSubmit}
         className="flex min-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-xl border border-default bg-surface shadow-sm"
       >
-              <div className="border-b px-6 py-5 backdrop-blur sm:px-8 bg-surface border-default">
+              <div className="table-header border-b border-default px-6 py-5 backdrop-blur sm:px-8">
                 <div className="flex items-start justify-between gap-6">
                   <div className="max-w-2xl">
                     <p className="text-brand-primary mb-2 text-xs font-semibold uppercase tracking-[0.22em]">
@@ -667,7 +667,7 @@ export const CreateOrderForm: React.FC = () => {
                             Resume el encargo en una sola línea clara.
                           </p>
                           {!isFormValid && (
-                            <p className="mt-2 text-xs font-medium text-rose-700">
+                            <p className="mt-2 text-xs font-medium text-danger">
                               El campo pedido es obligatorio.
                             </p>
                           )}
@@ -876,7 +876,7 @@ export const CreateOrderForm: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCloseClick}
-                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-secondary transition-colors hover:bg-surface-hover"
                     >
                       Cancelar
                     </button>

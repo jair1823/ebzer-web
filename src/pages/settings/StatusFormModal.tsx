@@ -18,7 +18,15 @@ const slugify = (str: string) =>
     .replace(/\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
 
-const DEFAULT_COLOR = "#6B7280";
+const DEFAULT_COLOR = "#90D0C0";
+
+const RECOMMENDED_STATUS_COLORS = [
+  { label: "Pendiente", color: "#FFD040" },
+  { label: "En proceso", color: "#90D0C0" },
+  { label: "Atencion", color: "#FF9090" },
+  { label: "Completado", color: "#7BCFAF" },
+  { label: "Inactivo", color: "#8B8B8B" },
+];
 
 export const StatusFormModal: React.FC<StatusFormModalProps> = ({
   isOpen,
@@ -35,6 +43,7 @@ export const StatusFormModal: React.FC<StatusFormModalProps> = ({
   const [isFinalStatus, setIsFinalStatus] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
+  const previewTextColor = `color-mix(in srgb, ${color} 55%, rgb(var(--text-primary)))`;
 
   // Populate form when editing
   React.useEffect(() => {
@@ -129,7 +138,7 @@ export const StatusFormModal: React.FC<StatusFormModalProps> = ({
           {/* Body */}
           <div className="px-6 py-5 space-y-4">
             {error && (
-              <p className="text-xs font-medium text-danger bg-danger/10 rounded-lg px-3 py-2">
+              <p className="rounded-lg bg-danger-subtle px-3 py-2 text-xs font-medium text-danger">
                 {error}
               </p>
             )}
@@ -186,14 +195,29 @@ export const StatusFormModal: React.FC<StatusFormModalProps> = ({
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
                     className="input-base font-mono text-xs"
-                    placeholder="#6B7280"
+                    placeholder={DEFAULT_COLOR}
                     maxLength={7}
                   />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {RECOMMENDED_STATUS_COLORS.map((option) => (
+                    <button
+                      key={option.color}
+                      type="button"
+                      onClick={() => setColor(option.color)}
+                      className={`h-7 w-7 rounded-full border transition-transform hover:scale-105 focus-ring ${
+                        color.toUpperCase() === option.color ? "border-strong" : "border-subtle"
+                      }`}
+                      style={{ backgroundColor: option.color }}
+                      aria-label={`Usar color ${option.label}`}
+                      title={option.label}
+                    />
+                  ))}
                 </div>
                 {/* Preview */}
                 <span
                   className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
-                  style={{ backgroundColor: hexToRgba(color, 0.18), color }}
+                  style={{ backgroundColor: hexToRgba(color, 0.18), color: previewTextColor }}
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
                   {displayName || "Vista previa"}

@@ -1,7 +1,6 @@
 /**
  * Design Tokens - Ebzer Web
- * Sistema de color basado en Carbon Design System y Material Design
- * Opción C: Rosado Modernizado con Dark Mode
+ * Paleta inspirada en el logo: coral, amarillo y menta con neutros calidos.
  */
 
 @layer theme {
@@ -11,72 +10,77 @@
        ======================================== */
 
     /* === Backgrounds === */
-    --background: 248 250 252; /* slate-50 - fondo global */
-    --surface: 255 255 255; /* white - cards, modales */
-    --surface-elevated: 241 245 249; /* slate-100 - elementos elevados */
-    --surface-hover: 226 232 240; /* slate-200 - hover en superficies */
+    --background: 255 249 241;
+    --surface: 255 255 252;
+    --surface-elevated: 255 243 226;
+    --surface-hover: 255 232 202;
 
     /* === Text === */
-    --text-primary: 15 23 42; /* slate-900 - texto principal */
-    --text-secondary: 100 116 139; /* slate-500 - texto secundario */
-    --text-tertiary: 148 163 184; /* slate-400 - texto terciario */
-    --text-disabled: 203 213 225; /* slate-300 - texto deshabilitado */
-    --text-on-primary: 255 255 255; /* white - texto sobre primario */
-    --text-on-accent: 255 255 255; /* white - texto sobre acento */
+    --text-primary: 47 36 32;
+    --text-secondary: 111 93 83;
+    --text-tertiary: 155 132 120;
+    --text-disabled: 205 184 168;
+    --text-on-primary: 92 31 39;
+    --text-on-secondary: 91 59 0;
+    --text-on-accent: 18 63 55;
+    --text-on-danger: 255 255 255;
 
     /* === Borders === */
-    --border: 226 232 240; /* slate-200 - bordes estándar */
-    --border-subtle: 241 245 249; /* slate-100 - bordes sutiles */
-    --border-strong: 203 213 225; /* slate-300 - bordes fuertes */
+    --border: 241 219 193;
+    --border-subtle: 248 233 216;
+    --border-strong: 221 189 152;
 
-    /* === Brand Colors - Primary (Rose/Rosado) === */
-    --primary: 244 63 94; /* rose-500 - acción principal */
-    --primary-hover: 225 29 72; /* rose-600 - hover */
-    --primary-active: 190 18 60; /* rose-700 - active (2 pasos) */
-    --primary-soft: 254 205 211; /* rose-200 - backgrounds suaves */
-    --primary-strong: 248 113 113; /* rose-400 - énfasis medio */
-    --primary-foreground: 127 29 29; /* rose-900 - texto sobre rosado claro */
+    /* === Brand Colors - Primary (Coral) === */
+    --primary: 255 144 144;
+    --primary-hover: 224 96 112;
+    --primary-active: 198 74 92;
+    --primary-soft: 255 225 221;
+    --primary-strong: 224 96 112;
+    --primary-foreground: 125 39 50;
 
-    /* === Brand Colors - Secondary (Lime/Verde Lima) === */
-    --secondary: 132 204 22; /* lime-500 - success */
-    --secondary-hover: 101 163 13; /* lime-600 */
-    --secondary-active: 77 124 15; /* lime-700 */
-    --secondary-soft: 217 249 157; /* lime-200 */
-    --secondary-strong: 163 230 53; /* lime-400 */
-    --secondary-foreground: 54 83 20; /* lime-900 */
+    /* === Brand Colors - Secondary (Amarillo) === */
+    --secondary: 255 208 64;
+    --secondary-hover: 217 154 30;
+    --secondary-active: 179 119 18;
+    --secondary-soft: 255 242 187;
+    --secondary-strong: 217 154 30;
+    --secondary-foreground: 91 59 0;
 
-    /* === Brand Colors - Accent (Cyan) === */
-    --accent: 6 182 212; /* cyan-500 - CTA importante */
-    --accent-hover: 8 145 178; /* cyan-600 */
-    --accent-active: 14 116 144; /* cyan-700 */
-    --accent-soft: 165 243 252; /* cyan-200 */
-    --accent-strong: 34 211 238; /* cyan-400 */
+    /* === Brand Colors - Accent (Menta) === */
+    --accent: 144 208 192;
+    --accent-hover: 79 159 138;
+    --accent-active: 55 126 109;
+    --accent-soft: 218 244 237;
+    --accent-strong: 79 159 138;
+    --accent-foreground: 18 63 55;
 
     /* === Functional Colors === */
-    --info: 14 165 233; /* sky-500 - información */
-    --info-soft: 186 230 253; /* sky-200 */
-    --info-strong: 56 189 248; /* sky-400 */
-    --info-foreground: 12 74 110; /* sky-900 */
+    --info: 79 159 138;
+    --info-soft: 218 244 237;
+    --info-strong: 51 128 113;
+    --info-foreground: 18 63 55;
 
-    --warning: 245 158 11; /* amber-500 */
-    --warning-soft: 254 215 170; /* amber-200 */
-    --warning-foreground: 120 53 15; /* amber-900 */
+    --warning: 217 154 30;
+    --warning-soft: 255 242 187;
+    --warning-foreground: 91 59 0;
 
-    --danger: 239 68 68; /* red-500 - errores/destructivas */
-    --danger-hover: 220 38 38; /* red-600 */
-    --danger-active: 185 28 28; /* red-700 */
-    --danger-soft: 254 202 202; /* red-200 */
-    --danger-strong: 248 113 113; /* red-400 */
+    --danger: 196 51 59;
+    --danger-hover: 157 39 48;
+    --danger-active: 125 31 40;
+    --danger-soft: 255 224 221;
+    --danger-strong: 224 96 112;
 
-    --success: 132 204 22; /* lime-500 - mismo que secondary */
-    --success-soft: 217 249 157; /* lime-200 */
+    --success: 79 159 138;
+    --success-soft: 218 244 237;
+    --success-foreground: 18 63 55;
 
-    --muted: 79 70 229; /* indigo-600 - estados completados/archivados */
-    --muted-soft: 199 210 254; /* indigo-200 */
+    --muted: 139 139 139;
+    --muted-soft: 235 232 226;
+    --muted-foreground: 82 76 72;
 
     /* === Focus & Interaction === */
-    --focus: 6 182 212; /* cyan-500 - ring de foco */
-    --focus-ring: 6 182 212; /* cyan-500 alpha se aplica en uso */
+    --focus: 79 159 138;
+    --focus-ring: 79 159 138;
 
     /* === Shadows === */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -91,73 +95,78 @@
 
   [data-theme="dark"] {
     /* === Backgrounds - Invertidos === */
-    --background: 2 6 23; /* slate-950 - fondo global oscuro */
-    --surface: 15 23 42; /* slate-900 - cards oscuras */
-    --surface-elevated: 30 41 59; /* slate-800 - elevados */
-    --surface-hover: 51 65 85; /* slate-700 - hover */
+    --background: 32 24 22;
+    --surface: 43 33 30;
+    --surface-elevated: 56 42 37;
+    --surface-hover: 73 55 47;
 
     /* === Text - Invertidos === */
-    --text-primary: 248 250 252; /* slate-50 - texto claro */
-    --text-secondary: 148 163 184; /* slate-400 */
-    --text-tertiary: 100 116 139; /* slate-500 */
-    --text-disabled: 71 85 105; /* slate-600 */
-    --text-on-primary: 255 255 255; /* white */
-    --text-on-accent: 255 255 255; /* white */
+    --text-primary: 255 247 238;
+    --text-secondary: 223 202 184;
+    --text-tertiary: 181 152 134;
+    --text-disabled: 117 91 79;
+    --text-on-primary: 92 31 39;
+    --text-on-secondary: 91 59 0;
+    --text-on-accent: 18 63 55;
+    --text-on-danger: 92 31 39;
 
     /* === Borders === */
-    --border: 51 65 85; /* slate-700 */
-    --border-subtle: 30 41 59; /* slate-800 */
-    --border-strong: 71 85 105; /* slate-600 */
+    --border: 93 70 59;
+    --border-subtle: 73 55 47;
+    --border-strong: 136 103 86;
 
-    /* === Brand Colors - Primary (Rose más claro para dark) === */
-    --primary: 251 113 133; /* rose-400 - más visible en dark */
-    --primary-hover: 244 63 94; /* rose-500 */
-    --primary-active: 225 29 72; /* rose-600 */
-    --primary-soft: 159 18 57; /* rose-800 - background oscuro */
-    --primary-strong: 244 63 94; /* rose-500 */
-    --primary-foreground: 255 241 242; /* rose-50 */
+    /* === Brand Colors - Primary (Coral) === */
+    --primary: 255 144 144;
+    --primary-hover: 255 166 161;
+    --primary-active: 224 96 112;
+    --primary-soft: 101 48 50;
+    --primary-strong: 255 166 161;
+    --primary-foreground: 255 231 227;
 
-    /* === Brand Colors - Secondary (Lime más claro) === */
-    --secondary: 163 230 53; /* lime-400 */
-    --secondary-hover: 132 204 22; /* lime-500 */
-    --secondary-active: 101 163 13; /* lime-600 */
-    --secondary-soft: 77 124 15; /* lime-700 - background oscuro */
-    --secondary-strong: 132 204 22; /* lime-500 */
-    --secondary-foreground: 247 254 231; /* lime-50 */
+    /* === Brand Colors - Secondary (Amarillo) === */
+    --secondary: 255 208 64;
+    --secondary-hover: 255 221 106;
+    --secondary-active: 217 154 30;
+    --secondary-soft: 94 70 26;
+    --secondary-strong: 255 221 106;
+    --secondary-foreground: 255 242 187;
 
-    /* === Brand Colors - Accent (Cyan más claro) === */
-    --accent: 34 211 238; /* cyan-400 */
-    --accent-hover: 6 182 212; /* cyan-500 */
-    --accent-active: 8 145 178; /* cyan-600 */
-    --accent-soft: 14 116 144; /* cyan-700 - background oscuro */
-    --accent-strong: 6 182 212; /* cyan-500 */
+    /* === Brand Colors - Accent (Menta) === */
+    --accent: 144 208 192;
+    --accent-hover: 169 224 210;
+    --accent-active: 79 159 138;
+    --accent-soft: 42 82 72;
+    --accent-strong: 169 224 210;
+    --accent-foreground: 218 244 237;
 
     /* === Functional Colors (dark) === */
-    --muted: 129 140 248; /* indigo-400 - más claro para dark mode */
-    --muted-soft: 55 48 163; /* indigo-800 */
+    --muted: 180 170 160;
+    --muted-soft: 74 66 60;
+    --muted-foreground: 235 232 226;
 
     /* === Functional Colors === */
-    --info: 56 189 248; /* sky-400 */
-    --info-soft: 12 74 110; /* sky-900 dark */
-    --info-strong: 14 165 233; /* sky-500 */
-    --info-foreground: 224 242 254; /* sky-50 */
+    --info: 144 208 192;
+    --info-soft: 42 82 72;
+    --info-strong: 169 224 210;
+    --info-foreground: 218 244 237;
 
-    --warning: 251 191 36; /* amber-400 */
-    --warning-soft: 120 53 15; /* amber-900 dark */
-    --warning-foreground: 254 252 232; /* amber-50 */
+    --warning: 255 208 64;
+    --warning-soft: 94 70 26;
+    --warning-foreground: 255 242 187;
 
-    --danger: 248 113 113; /* red-400 */
-    --danger-hover: 239 68 68; /* red-500 */
-    --danger-active: 220 38 38; /* red-600 */
-    --danger-soft: 127 29 29; /* red-900 dark */
-    --danger-strong: 239 68 68; /* red-500 */
+    --danger: 255 144 144;
+    --danger-hover: 224 96 112;
+    --danger-active: 196 51 59;
+    --danger-soft: 101 48 50;
+    --danger-strong: 255 166 161;
 
-    --success: 163 230 53; /* lime-400 */
-    --success-soft: 77 124 15; /* lime-700 dark */
+    --success: 123 207 175;
+    --success-soft: 42 82 72;
+    --success-foreground: 218 244 237;
 
     /* === Focus === */
-    --focus: 34 211 238; /* cyan-400 - más visible en dark */
-    --focus-ring: 34 211 238;
+    --focus: 144 208 192;
+    --focus-ring: 144 208 192;
 
     /* === Shadows - Más intensas en dark === */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);

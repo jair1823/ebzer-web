@@ -7,17 +7,21 @@ export const IncomesHeader: React.FC<{
   selectedIncome?: Income | null;
   createIncome: (data: IncomeFormData) => Promise<unknown>;
   updateIncome: (incomeId: number, data: IncomeFormData) => Promise<unknown>;
+  onDeleteIncome: (income: Income) => void;
   toggleModal: () => void;
   openCreateIncome: () => void;
   canWrite: boolean;
+  canManage: boolean;
 }> = ({ 
   createIncome, 
   updateIncome, 
+  onDeleteIncome,
   isOpen, 
   toggleModal, 
   selectedIncome, 
   openCreateIncome,
   canWrite,
+  canManage,
 }) => {
   return (
     <header className="mb-6 overflow-hidden rounded-xl shadow-sm surface-card">
@@ -37,8 +41,10 @@ export const IncomesHeader: React.FC<{
             selectedIncome={selectedIncome}
             createIncome={createIncome}
             updateIncome={updateIncome}
+            onDeleteIncome={onDeleteIncome}
             toggleModal={toggleModal}
             openCreateIncome={openCreateIncome}
+            canDelete={canManage}
           />
         )}
       </div>
