@@ -30,7 +30,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm overflow-hidden rounded-xl shadow-sm surface-card">
         <div className="px-8 py-8">
           {/* Brand */}
@@ -64,7 +64,7 @@ export const LoginPage: React.FC = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={submitting}
-                className="block w-full rounded-md border border-default bg-surface px-3 py-2 text-sm text-primary placeholder-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+                className="input-base rounded-md placeholder-tertiary disabled:opacity-60"
                 placeholder="admin"
               />
             </div>
@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={submitting}
-                className="block w-full rounded-md border border-default bg-surface px-3 py-2 text-sm text-primary placeholder-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+                className="input-base rounded-md placeholder-tertiary disabled:opacity-60"
                 placeholder="••••••••"
               />
             </div>

@@ -57,7 +57,7 @@ export const IncomesTable: React.FC<{
     <div className="overflow-hidden rounded-xl shadow-sm surface-card">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-subtle">
-          <thead className="bg-surface">
+          <thead className="table-header">
             <tr>
               <th
                 scope="col"
@@ -88,11 +88,11 @@ export const IncomesTable: React.FC<{
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-subtle bg-surface-elevated">
+          <tbody className="table-body divide-y divide-subtle">
             {incomes.map((income) => (
               <tr
                 key={income.id}
-                className={canManage ? "transition-colors hover:bg-surface-hover cursor-pointer" : ""}
+                className={canManage ? "table-row-interactive" : ""}
                 onClick={canManage ? () => onSelectIncome(income) : undefined}
               >
                 <td className="whitespace-nowrap px-6 py-4">

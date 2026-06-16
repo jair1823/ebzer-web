@@ -37,11 +37,7 @@ export const ThemeToggle: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50">
       <button
         onClick={toggleTheme}
-        className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
-        style={{
-          backgroundColor: theme === "light" ? "#f43f5e" : "#34d3ee",
-          color: "#ffffff",
-        }}
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus-ring"
         aria-label={`Cambiar a tema ${theme === "light" ? "oscuro" : "claro"}`}
         title={`Cambiar a tema ${theme === "light" ? "oscuro" : "claro"}`}
       >
@@ -54,11 +50,7 @@ export const ThemeToggle: React.FC = () => {
 
       {/* Badge indicador */}
       <div
-        className="pointer-events-none absolute -top-1 -left-1 rounded-full px-2 py-0.5 text-xs font-bold shadow-md"
-        style={{
-          backgroundColor: theme === "light" ? "#334155" : "#f8fafc",
-          color: theme === "light" ? "#f8fafc" : "#334155",
-        }}
+        className="pointer-events-none absolute -left-1 -top-1 rounded-full bg-surface-elevated px-2 py-0.5 text-xs font-bold text-primary shadow-md"
       >
         DEV
       </div>

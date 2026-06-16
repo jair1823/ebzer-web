@@ -4,7 +4,7 @@ import { useAuth } from "./useAuth";
 import type { Role } from "./types";
 
 const FullPageSpinner: React.FC = () => (
-  <div className="flex min-h-screen items-center justify-center bg-slate-50">
+  <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="text-secondary text-sm">Cargando...</div>
   </div>
 );

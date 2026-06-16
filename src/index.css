@@ -31,6 +31,10 @@
     background-color: rgb(var(--surface-hover));
   }
 
+  .bg-subtle {
+    background-color: rgb(var(--border-subtle));
+  }
+
   .bg-primary-soft {
     background-color: rgb(var(--primary-soft));
   }
@@ -95,6 +99,22 @@
     background-color: rgb(var(--success-soft));
   }
 
+  .bg-success-subtle {
+    background-color: rgb(var(--success-soft));
+  }
+
+  .bg-warning-subtle {
+    background-color: rgb(var(--warning-soft));
+  }
+
+  .bg-danger-subtle {
+    background-color: rgb(var(--danger-soft));
+  }
+
+  .bg-info-subtle {
+    background-color: rgb(var(--info-soft));
+  }
+
   /* ========================================
      Text Utilities
      ======================================== */
@@ -115,8 +135,16 @@
     color: rgb(var(--text-on-primary));
   }
 
+  .text-on-secondary {
+    color: rgb(var(--text-on-secondary));
+  }
+
   .text-on-accent {
     color: rgb(var(--text-on-accent));
+  }
+
+  .text-on-danger {
+    color: rgb(var(--text-on-danger));
   }
 
   .text-brand-primary {
@@ -125,6 +153,10 @@
 
   .text-brand-secondary {
     color: rgb(var(--secondary));
+  }
+
+  .text-success {
+    color: rgb(var(--success-foreground));
   }
 
   .text-info {
@@ -137,6 +169,14 @@
 
   .text-danger {
     color: rgb(var(--danger));
+  }
+
+  .text-muted {
+    color: rgb(var(--muted-foreground));
+  }
+
+  .placeholder-tertiary::placeholder {
+    color: rgb(var(--text-tertiary));
   }
 
   /* ========================================
@@ -157,6 +197,26 @@
 
   .border-primary {
     border-color: rgb(var(--primary));
+  }
+
+  .border-success-muted {
+    border-color: rgb(var(--success) / 0.35);
+  }
+
+  .border-warning-muted {
+    border-color: rgb(var(--warning) / 0.4);
+  }
+
+  .border-danger-muted {
+    border-color: rgb(var(--danger) / 0.35);
+  }
+
+  .border-info-muted {
+    border-color: rgb(var(--info) / 0.35);
+  }
+
+  .border-danger-soft {
+    border-color: rgb(var(--danger-soft));
   }
 
   /* ========================================
@@ -207,7 +267,7 @@
 
   .btn-secondary {
     background-color: rgb(var(--secondary));
-    color: rgb(var(--text-on-primary));
+    color: rgb(var(--text-on-secondary));
   }
 
   .btn-secondary:hover:not(:disabled) {
@@ -239,9 +299,26 @@
     --tw-ring-color: rgb(var(--accent) / 0.5);
   }
 
+  .btn-ternary {
+    background-color: rgb(var(--accent));
+    color: rgb(var(--text-on-accent));
+  }
+
+  .btn-ternary:hover:not(:disabled) {
+    background-color: rgb(var(--accent-hover));
+  }
+
+  .btn-ternary:active:not(:disabled) {
+    background-color: rgb(var(--accent-active));
+  }
+
+  .btn-ternary:focus-visible {
+    --tw-ring-color: rgb(var(--accent) / 0.5);
+  }
+
   .btn-danger {
     background-color: rgb(var(--danger));
-    color: rgb(var(--text-on-primary));
+    color: rgb(var(--text-on-danger));
   }
 
   .btn-danger:hover:not(:disabled) {
@@ -264,6 +341,7 @@
 
   .btn-outline:hover:not(:disabled) {
     background-color: rgb(var(--surface-hover));
+    border-color: rgb(var(--border-strong));
   }
 
   .btn-outline:focus-visible {
@@ -285,6 +363,12 @@
     box-shadow: var(--shadow-sm);
   }
 
+  .surface-elevated {
+    background-color: rgb(var(--surface-elevated));
+    border: 1px solid rgb(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
   /* Divider */
   .divider {
     border-color: rgb(var(--border));
@@ -293,7 +377,7 @@
   /* Badges */
   .badge-success {
     background-color: rgb(var(--success-soft));
-    color: rgb(var(--secondary-foreground));
+    color: rgb(var(--success-foreground));
     @apply rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 
@@ -316,16 +400,38 @@
   }
 
   /* Table */
+  .table-header {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--secondary-soft) / 0.8),
+      rgb(var(--accent-soft) / 0.75),
+      rgb(var(--primary-soft) / 0.7)
+    );
+  }
+
+  .table-body {
+    background-color: rgb(var(--surface));
+  }
+
   .table-row-interactive {
     @apply cursor-pointer transition-colors;
   }
 
   .table-row-interactive:hover {
-    background-color: rgb(var(--primary-soft) / 0.3);
+    background-color: rgb(var(--accent-soft) / 0.55);
+  }
+
+  .accent-accent {
+    accent-color: rgb(var(--accent));
   }
 
   /* Generic disabled state utility */
   .disabled-state {
-    @apply disabled:cursor-not-allowed disabled:bg-slate-200/50 disabled:text-slate-500 disabled:opacity-70;
+    @apply disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .disabled-state:disabled {
+    background-color: rgb(var(--surface-elevated) / 0.7);
+    color: rgb(var(--text-disabled));
   }
 }

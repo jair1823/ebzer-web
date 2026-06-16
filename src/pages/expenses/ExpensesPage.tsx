@@ -891,7 +891,7 @@ const ExpensesTable: React.FC<{
     <div className="overflow-hidden rounded-xl shadow-sm surface-card">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-subtle">
-          <thead className="bg-surface">
+          <thead className="table-header">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-secondary">Comercio</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-secondary">Fecha</th>
@@ -902,11 +902,11 @@ const ExpensesTable: React.FC<{
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-subtle bg-surface-elevated">
+          <tbody className="table-body divide-y divide-subtle">
             {expenses.map((expense) => (
               <tr
                 key={expense.id}
-                className={canManage ? "cursor-pointer transition-colors hover:bg-surface-hover" : ""}
+                className={canManage ? "table-row-interactive" : ""}
                 onClick={canManage ? () => onSelectExpense(expense) : undefined}
               >
                 <td className="px-6 py-4">
