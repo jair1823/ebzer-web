@@ -9,7 +9,11 @@ import {
 import { ConfirmModal, Toast } from "../../components";
 import { useConfirmModal, useExpenses, useToast } from "../../hooks";
 import { incomesService } from "../../services";
-import { isoDateStringToLocalDate } from "../../utils/date";
+import {
+  formatDateInputValue,
+  formatIsoDateStringToLocale,
+  isoDateStringToLocalDate,
+} from "../../utils/date";
 import type {
   Comercio,
   ComercioFormData,
@@ -26,24 +30,6 @@ const formatCurrency = (value: number) =>
     currency: "CRC",
     minimumFractionDigits: 2,
   }).format(value);
-
-const formatDate = (dateString: string) => {
-  const date = isoDateStringToLocalDate(dateString);
-  if (!date) return "";
-
-  return new Intl.DateTimeFormat("es-CR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-};
-
-const formatDateInputValue = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 const CATALOG_COLLAPSED_STORAGE_KEY = "ebzer.expenses.catalogCollapsed";
 
@@ -920,7 +906,7 @@ const ExpensesTable: React.FC<{
                   )}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-secondary">
-                  {formatDate(expense.date)}
+                  {formatIsoDateStringToLocale(expense.date)}
                 </td>
                 <td className="px-6 py-4 text-sm text-secondary">
                   <span title={expense.items.map((item) => item.product_name).join(", ")}>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import type { Income } from "./types";
-import { isoDateStringToLocalDate } from "../../utils/date";
+import { formatIsoDateStringToLocale } from "../../utils/date";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-CR", {
@@ -9,17 +9,6 @@ const formatCurrency = (value: number) =>
     currency: "CRC",
     minimumFractionDigits: 2,
   }).format(value);
-
-const formatDate = (dateString: string) => {
-  const date = isoDateStringToLocalDate(dateString);
-  if (!date) return "";
-
-  return new Intl.DateTimeFormat("es-CR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-};
 
 export const IncomesTable: React.FC<{
   incomes: Income[];
@@ -112,7 +101,7 @@ export const IncomesTable: React.FC<{
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
                   <span className="text-sm text-secondary">
-                    {formatDate(income.date)}
+                    {formatIsoDateStringToLocale(income.date)}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-right text-sm">

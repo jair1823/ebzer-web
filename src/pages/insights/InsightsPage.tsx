@@ -9,10 +9,10 @@ import {
   WalletCards,
 } from "lucide-react";
 import { insightsService } from "../../services";
-import { formatCurrency } from "../../utils";
+import { formatCurrency, formatDateInputValue } from "../../utils";
 import type { InsightsSummary } from "./types";
 
-const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
+const formatDateParam = (date: Date): string => formatDateInputValue(date);
 
 const getCurrentMonthRange = () => {
   const now = new Date();

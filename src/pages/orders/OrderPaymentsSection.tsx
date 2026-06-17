@@ -1,7 +1,7 @@
 import React from "react";
 import { Plus, X } from "lucide-react";
 import type { TemporaryIncome } from "./types";
-import { formatCurrency } from "../../utils";
+import { formatCurrency, formatIsoDateStringToLocale } from "../../utils";
 
 interface OrderPaymentsSectionProps {
   incomes: TemporaryIncome[];
@@ -49,7 +49,7 @@ export const OrderPaymentsSection: React.FC<OrderPaymentsSectionProps> = ({
             </div>
             <div className="flex-1 text-center">
               <p className="text-xs text-secondary">
-                {income.date ? new Date(income.date).toLocaleDateString('es-CR') : 'Sin fecha'}
+                {income.date ? formatIsoDateStringToLocale(income.date) : 'Sin fecha'}
               </p>
             </div>
             <div className="flex-shrink-0" data-invoice-exclude="true">

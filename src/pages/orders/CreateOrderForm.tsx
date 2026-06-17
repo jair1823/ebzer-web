@@ -20,21 +20,29 @@ import type { Income } from "../incomes/types";
 import { ConfirmModal, PaymentBadgeContent, Toast, StatusPicker } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
 import { auditService, incomesService, ordersService } from "../../services";
-import { formatOrderId, formatCurrency, calculatePaymentStatus, getPaymentBadgeClasses } from "../../utils";
+import {
+  calculatePaymentStatus,
+  formatCurrency,
+  formatDateInputValue,
+  formatIsoDateTimeStringToLocale,
+  formatOrderId,
+  getPaymentBadgeClasses,
+  isoDateStringToLocalDate,
+} from "../../utils";
 import { OrderPaymentsSection } from "./OrderPaymentsSection";
 import { useAuth } from "../../auth";
 import type { AuditEvent } from "../../services/audit.service";
 
 // Helper to get today's date in YYYY-MM-DD format (local timezone)
 const getTodayLocalDate = (): string => {
-  return new Date().toLocaleDateString('en-CA'); // en-CA produces YYYY-MM-DD format
+  return formatDateInputValue(new Date());
 };
 
 // Helper to get local date plus N days in YYYY-MM-DD format
 const getLocalDatePlusDays = (days: number): string => {
   const now = new Date();
   const local = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
-  return local.toLocaleDateString('en-CA');
+  return formatDateInputValue(local);
 };
 
 const createInitialFormData = (): OrderFormData => ({
@@ -58,9 +66,8 @@ const orderToFormData = (order: Order): OrderFormData => ({
   status_id: order.status_id ?? null,
   estimated_delivery_date: order.estimated_delivery_date
     ? (() => {
-        const d = new Date(order.estimated_delivery_date);
-        const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        return local.toLocaleDateString("en-CA");
+        const date = isoDateStringToLocalDate(order.estimated_delivery_date);
+        return date ? formatDateInputValue(date) : "";
       })()
     : "",
   delivery_type: order.delivery_type || "shipping",
@@ -166,7 +173,10 @@ export const CreateOrderForm: React.FC = () => {
       const loadedIncomes = orderIncomes.map((income: Income) => ({
         id: `existing-${income.id}`,
         amount: income.amount,
-        date: income.date ? new Date(income.date).toISOString().split("T")[0] : null,
+        date: (() => {
+          const date = isoDateStringToLocalDate(income.date);
+          return date ? formatDateInputValue(date) : null;
+        })(),
         isExisting: true,
         backendId: income.id,
       }));
@@ -906,10 +916,7 @@ export const CreateOrderForm: React.FC = () => {
                                       {event.summary ?? event.action}
                                     </p>
                                     <time className="shrink-0 text-xs text-tertiary">
-                                      {new Intl.DateTimeFormat("es-CR", {
-                                        dateStyle: "short",
-                                        timeStyle: "short",
-                                      }).format(new Date(event.created_at))}
+                                      {formatIsoDateTimeStringToLocale(event.created_at)}
                                     </time>
                                   </div>
                                   <p className="mt-1 text-xs text-secondary">

@@ -10,12 +10,14 @@ import type { AgendaCreatePayload, AgendaItemFormData } from "../agenda/types";
 import type { Order, OrderFilters, OrdersViewMode } from "./types";
 
 import {
+  formatDateInputValue,
   formatOrderId,
+  isoDateStringToLocalDate,
   sortOrdersForTable,
 } from "../../utils";
 import { agendaService, incomesService } from "../../services";
 
-const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
+const formatDateParam = (date: Date): string => formatDateInputValue(date);
 
 const CARDS_ONLY_VIEWPORT_QUERY = "(max-width: 972px)";
 const UNGROUPED_CARDS_VIEWPORT_QUERY = "(max-width: 767px)";
@@ -103,8 +105,8 @@ export const OrdersPage: React.FC = () => {
         to: monthRange.to,
       });
       const total = incomes.reduce((sum, income) => {
-        const incomeDate = new Date(income.date);
-        if (incomeDate >= monthRange.start && incomeDate < monthRange.end) {
+        const incomeDate = isoDateStringToLocalDate(income.date);
+        if (incomeDate && incomeDate >= monthRange.start && incomeDate < monthRange.end) {
           return sum + income.amount;
         }
         return sum;
