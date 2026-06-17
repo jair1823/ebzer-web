@@ -3,6 +3,7 @@ import type { CreateUserPayload, Role, UpdateUserPayload, User } from "../../aut
 import { usersService } from "../../services";
 import { ConfirmModal, Toast } from "../../components";
 import { useConfirmModal, useToast } from "../../hooks";
+import { formatIsoDateStringToLocale } from "../../utils";
 
 const roleLabels: Record<Role, string> = {
   admin: "Admin",
@@ -16,16 +17,6 @@ const initialCreateForm: CreateUserPayload = {
   email: "",
   password: "",
   role: "operator",
-};
-
-const toInputDate = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("es-CR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 };
 
 export const UsersPage: React.FC = () => {
@@ -255,7 +246,9 @@ export const UsersPage: React.FC = () => {
                         {user.is_active ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-sm text-secondary">{toInputDate(user.created_at)}</td>
+                    <td className="px-5 py-4 text-sm text-secondary">
+                      {formatIsoDateStringToLocale(user.created_at)}
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
                         <button

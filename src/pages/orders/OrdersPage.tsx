@@ -10,13 +10,14 @@ import type { AgendaCreatePayload, AgendaItemFormData } from "../agenda/types";
 import type { Order, OrderFilters, OrdersViewMode } from "./types";
 
 import {
+  formatDateInputValue,
   formatOrderId,
   isoDateStringToLocalDate,
   sortOrdersForTable,
 } from "../../utils";
 import { agendaService, incomesService } from "../../services";
 
-const formatDateParam = (date: Date): string => date.toLocaleDateString("en-CA");
+const formatDateParam = (date: Date): string => formatDateInputValue(date);
 
 const CARDS_ONLY_VIEWPORT_QUERY = "(max-width: 972px)";
 const UNGROUPED_CARDS_VIEWPORT_QUERY = "(max-width: 767px)";
@@ -47,12 +48,6 @@ const getAgendaNoteContent = (order: Order): string => {
 };
 
 export const OrdersPage: React.FC = () => {
-  const {
-    orders,
-    loading,
-    finishOrder,
-    paymentStatuses,
-  } = useOrders();
   const navigate = useNavigate();
   const [isAgendaNoteOpen, setIsAgendaNoteOpen] = React.useState(false);
   const [selectedAgendaNoteOrder, setSelectedAgendaNoteOrder] =
@@ -61,7 +56,19 @@ export const OrdersPage: React.FC = () => {
     dateFrom: null,
     dateTo: null,
     status_ids: [],
+    search: "",
+    platform: "",
+    payment_status: "",
+    overdue: false,
+    amount_min: "",
+    amount_max: "",
   });
+  const {
+    orders,
+    loading,
+    finishOrder,
+    paymentStatuses,
+  } = useOrders(filters);
   const [viewMode, setViewMode] = React.useState<OrdersViewMode>("table");
   const [isCardsOnlyViewport, setIsCardsOnlyViewport] = React.useState(() =>
     matchesViewportQuery(CARDS_ONLY_VIEWPORT_QUERY)
@@ -98,8 +105,8 @@ export const OrdersPage: React.FC = () => {
         to: monthRange.to,
       });
       const total = incomes.reduce((sum, income) => {
-        const incomeDate = new Date(income.date);
-        if (incomeDate >= monthRange.start && incomeDate < monthRange.end) {
+        const incomeDate = isoDateStringToLocalDate(income.date);
+        if (incomeDate && incomeDate >= monthRange.start && incomeDate < monthRange.end) {
           return sum + income.amount;
         }
         return sum;
@@ -177,32 +184,7 @@ export const OrdersPage: React.FC = () => {
     }
   };
 
-  const applyFilters = (orders: Order[]): Order[] => {
-    return orders.filter((order) => {
-      // Filter by date range (using estimated_delivery_date)
-      if (filters.dateFrom && order.estimated_delivery_date) {
-        const orderDate = isoDateStringToLocalDate(order.estimated_delivery_date);
-        const fromDate = isoDateStringToLocalDate(filters.dateFrom);
-        if (orderDate && fromDate && orderDate < fromDate) return false;
-      }
-
-      if (filters.dateTo && order.estimated_delivery_date) {
-        const orderDate = isoDateStringToLocalDate(order.estimated_delivery_date);
-        const toDate = isoDateStringToLocalDate(filters.dateTo);
-        if (orderDate && toDate && orderDate > toDate) return false;
-      }
-
-      // Filter by status_id (empty array = show all)
-      if (filters.status_ids.length > 0) {
-        if (!filters.status_ids.includes(order.status_id)) return false;
-      }
-
-      return true;
-    });
-  };
-
-  const filteredOrders = applyFilters(orders);
-  const sortedOrders = sortOrdersForTable(filteredOrders);
+  const sortedOrders = sortOrdersForTable(orders);
   const ordersSummary = React.useMemo(() => {
     const activeOrders = orders.filter(
       (order) => order.status && !order.status.is_final_status

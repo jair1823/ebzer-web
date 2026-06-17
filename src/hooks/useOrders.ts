@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ordersService } from "../services";
-import type { Order, OrderFormData, PaymentStatus } from "../pages/orders/types";
+import type { Order, OrderFilters, OrderFormData, PaymentStatus } from "../pages/orders/types";
 
 const getOrderPaymentStatus = (order: Order): PaymentStatus => {
   if (order.payment_status) {
@@ -16,7 +16,7 @@ const getOrderPaymentStatus = (order: Order): PaymentStatus => {
   };
 };
 
-export const useOrders = () => {
+export const useOrders = (filters?: OrderFilters) => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -35,7 +35,7 @@ export const useOrders = () => {
   const getAllOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await ordersService.getAllOrders();
+      const response = await ordersService.getAllOrders(filters);
       setOrders(response);
 
       return response;
@@ -45,7 +45,7 @@ export const useOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters]);
 
   const updateOrder = async (orderId: number, orderData: OrderFormData) => {
     return ordersService.updateOrder(orderId.toString(), orderData);

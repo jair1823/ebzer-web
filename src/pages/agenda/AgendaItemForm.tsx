@@ -8,7 +8,7 @@ import type {
   AgendaItemType,
   AgendaOrderOption,
 } from "./types";
-import { formatOrderId, isoDateStringToLocalDate } from "../../utils";
+import { formatDateInputValue, formatOrderId, isoDateStringToLocalDate } from "../../utils";
 
 const typeOptions: Array<{ value: AgendaItemType; label: string }> = [
   { value: "note", label: "Nota" },
@@ -40,7 +40,7 @@ const getInitialCreateFormData = (
 
 const toInputDate = (value: string | null): string => {
   const date = isoDateStringToLocalDate(value);
-  return date ? date.toLocaleDateString("en-CA") : "";
+  return date ? formatDateInputValue(date) : "";
 };
 
 const toApiDate = (value: string): string | null => {

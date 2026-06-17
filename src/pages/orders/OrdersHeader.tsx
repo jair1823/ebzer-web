@@ -50,6 +50,12 @@ export const OrdersHeader: React.FC<{
       dateFrom: null,
       dateTo: null,
       status_ids: [],
+      search: "",
+      platform: "",
+      payment_status: "",
+      overdue: false,
+      amount_min: "",
+      amount_max: "",
     });
   };
 
@@ -58,13 +64,25 @@ export const OrdersHeader: React.FC<{
     if (filters.dateFrom) count++;
     if (filters.dateTo) count++;
     if (filters.status_ids.length > 0) count += filters.status_ids.length;
+    if (filters.search.trim()) count++;
+    if (filters.platform) count++;
+    if (filters.payment_status) count++;
+    if (filters.overdue) count++;
+    if (filters.amount_min.trim()) count++;
+    if (filters.amount_max.trim()) count++;
     return count;
   };
 
   const hasActiveFilters = (): boolean => {
     return filters.dateFrom !== null || 
            filters.dateTo !== null || 
-           filters.status_ids.length > 0;
+           filters.status_ids.length > 0 ||
+           filters.search.trim() !== "" ||
+           filters.platform !== "" ||
+           filters.payment_status !== "" ||
+           filters.overdue ||
+           filters.amount_min.trim() !== "" ||
+           filters.amount_max.trim() !== "";
   };
 
   // Close filters dropdown when clicking outside
@@ -151,6 +169,21 @@ export const OrdersHeader: React.FC<{
             {showFilters && (
               <div className={`absolute right-0 mt-2 w-96 bg-surface border border-subtle rounded-lg shadow-lg z-50 ${styles.dropdown}`}>
                 <div className="p-4 space-y-4">
+                  <div>
+                    <label htmlFor="filter-search" className="block text-xs font-medium text-secondary mb-1">
+                      Buscar
+                    </label>
+                    <input
+                      id="filter-search"
+                      type="search"
+                      value={filters.search}
+                      onChange={(event) =>
+                        setFilters((prev) => ({ ...prev, search: event.target.value }))
+                      }
+                      className="input-base text-xs py-1.5"
+                      placeholder="Cliente, teléfono, detalle o notas"
+                    />
+                  </div>
                   
                   {/* Fechas en una fila */}
                   <div className="grid grid-cols-2 gap-3">
@@ -192,6 +225,98 @@ export const OrdersHeader: React.FC<{
                       }
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="filter-platform" className="block text-xs font-medium text-secondary mb-1">
+                        Plataforma
+                      </label>
+                      <select
+                        id="filter-platform"
+                        value={filters.platform}
+                        onChange={(event) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            platform: event.target.value as OrderFilters["platform"],
+                          }))
+                        }
+                        className="input-base text-xs py-1.5"
+                      >
+                        <option value="">Todas</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="filter-payment-status" className="block text-xs font-medium text-secondary mb-1">
+                        Pago
+                      </label>
+                      <select
+                        id="filter-payment-status"
+                        value={filters.payment_status}
+                        onChange={(event) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            payment_status: event.target.value as OrderFilters["payment_status"],
+                          }))
+                        }
+                        className="input-base text-xs py-1.5"
+                      >
+                        <option value="">Todos</option>
+                        <option value="unpaid">Sin pago</option>
+                        <option value="partial">Parcial</option>
+                        <option value="paid">Pagado</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="filter-amount-min" className="block text-xs font-medium text-secondary mb-1">
+                        Monto mín.
+                      </label>
+                      <input
+                        id="filter-amount-min"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={filters.amount_min}
+                        onChange={(event) =>
+                          setFilters((prev) => ({ ...prev, amount_min: event.target.value }))
+                        }
+                        className="input-base text-xs py-1.5"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="filter-amount-max" className="block text-xs font-medium text-secondary mb-1">
+                        Monto máx.
+                      </label>
+                      <input
+                        id="filter-amount-max"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={filters.amount_max}
+                        onChange={(event) =>
+                          setFilters((prev) => ({ ...prev, amount_max: event.target.value }))
+                        }
+                        className="input-base text-xs py-1.5"
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs font-medium text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={filters.overdue}
+                      onChange={(event) =>
+                        setFilters((prev) => ({ ...prev, overdue: event.target.checked }))
+                      }
+                      className="h-4 w-4 accent-[rgb(var(--primary))]"
+                    />
+                    Vencidos
+                  </label>
 
                 </div>
               </div>
