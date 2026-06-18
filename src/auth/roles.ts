@@ -12,4 +12,6 @@ export const canManageExpenses = (role: Role): boolean => role === "admin";
 
 export const canManageExpenseCatalog = (role: Role): boolean => role === "admin";
 
+export const canCreateComercios = (role: Role): boolean => role === "admin" || role === "operator";
+
 export const canWriteBusinessRecords = (role: Role): boolean => role !== "guest";

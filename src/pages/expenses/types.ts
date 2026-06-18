@@ -30,6 +30,7 @@ export interface Expense {
   comercio?: Comercio | null;
   description: string | null;
   date: string;
+  amount: number | null;
   total: number;
   items: ExpenseItem[];
   created_at: string;
@@ -46,6 +47,7 @@ export interface ExpenseFormData {
   comercio_id: number;
   date?: string | null;
   description?: string | null;
+  amount?: number | null;
   items: ExpenseItemFormData[];
 }
 
