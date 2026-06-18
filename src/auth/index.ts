@@ -8,6 +8,7 @@ export {
   canManageIncomes,
   canManageExpenses,
   canManageExpenseCatalog,
+  canCreateComercios,
   canWriteBusinessRecords,
 } from "./roles";
 export { AuthContext } from "./authContext";
