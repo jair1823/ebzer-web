@@ -7,6 +7,7 @@ import {
   Menu,
   Package,
   Settings,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -115,6 +116,19 @@ export const Navbar: React.FC = () => {
             {user && (
               <div className="hidden md:flex items-center gap-2">
                 <span className="text-sm text-primary font-medium">{user.name}</span>
+                <NavLink
+                  to="/settings/profile"
+                  className={({ isActive }) =>
+                    `inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary-soft text-brand-primary"
+                        : "text-secondary hover:bg-surface-elevated hover:text-primary"
+                    }`
+                  }
+                >
+                  <UserCog size={14} strokeWidth={2} aria-hidden="true" />
+                  <span>Ajustes</span>
+                </NavLink>
                 <span className="inline-flex items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-brand-primary">
                   {roleLabels[user.role] ?? user.role}
                 </span>
@@ -184,8 +198,22 @@ export const Navbar: React.FC = () => {
               {user && (
                 <div className="mt-2 border-t border-subtle pt-2">
                   <div className="flex items-center justify-between px-4 py-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium text-primary">{user.name}</span>
+                      <NavLink
+                        to="/settings/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={({ isActive }) =>
+                          `inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                            isActive
+                              ? "bg-primary-soft text-brand-primary"
+                              : "text-secondary hover:bg-surface-elevated hover:text-primary"
+                          }`
+                        }
+                      >
+                        <UserCog size={14} strokeWidth={2} aria-hidden="true" />
+                        <span>Ajustes</span>
+                      </NavLink>
                       <span className="inline-flex items-center rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-brand-primary">
                         {roleLabels[user.role] ?? user.role}
                       </span>
