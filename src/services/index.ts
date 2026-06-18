@@ -1,4 +1,5 @@
 export { ordersService } from "./orders.service";
+export { accountService } from "./account.service";
 export { incomesService } from "./incomes.service";
 export { expensesService } from "./expenses.service";
 export { orderStatusesService } from "./orderStatuses.service";

@@ -1,8 +1,7 @@
 import "./App.css";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
-import { AgendaPage, ExpensesPage, IncomesPage, InsightsPage, OrderStatusesPage, OrdersPage } from "./pages";
+import { AgendaPage, ExpensesPage, IncomesPage, InsightsPage, OrderStatusesPage, OrdersPage, ProfileSettingsPage } from "./pages";
 import { DashboardLayout } from "./layouts/DashboardLayout";
-import { ThemeToggle } from "./components";
 import { ProtectedRoute, RequireRole } from "./auth";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { UsersPage } from "./pages";
@@ -57,6 +56,10 @@ const router = createBrowserRouter([
             element: <OrderStatusesPage />,
           },
           {
+            path: "settings/profile",
+            element: <ProfileSettingsPage />,
+          },
+          {
             element: <RequireRole role="admin" />,
             children: [
               {
@@ -72,12 +75,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return (
-    <>
-      <RouterProvider router={router} />
-      <ThemeToggle />
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
