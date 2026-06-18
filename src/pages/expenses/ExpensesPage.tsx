@@ -62,35 +62,45 @@ const createBlankItem = (): ExpenseItemFormData => ({
   unit_price: 0,
 });
 
+type ExpenseEntryMode = "simple" | "products";
+
+const getExpenseEntryMode = (expense?: Expense | null): ExpenseEntryMode =>
+  expense?.items.length ? "products" : "simple";
+
 const getExpenseFormData = (expense?: Expense | null): ExpenseFormData => {
   if (!expense) {
     return {
       comercio_id: 0,
       date: formatDateInputValue(new Date()),
       description: "",
-      items: [createBlankItem()],
+      amount: 0,
+      items: [],
     };
   }
 
   const expenseDate = isoDateStringToLocalDate(expense.date);
+  const hasItems = expense.items.length > 0;
   return {
     comercio_id: expense.comercio_id,
     date: expenseDate ? formatDateInputValue(expenseDate) : null,
     description: expense.description ?? "",
-    items: expense.items.map((item) => ({
-      product_id: item.product_id,
-      product_name: item.product_name,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-    })),
+    amount: hasItems ? null : expense.amount ?? expense.total ?? 0,
+    items: hasItems
+      ? expense.items.map((item) => ({
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        }))
+      : [],
   };
 };
 
-const getExpenseTotal = (items: ExpenseItemFormData[]) =>
+const getExpenseItemsTotal = (items: ExpenseItemFormData[]) =>
   items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
 
 const getProductSummary = (expense: Expense) => {
-  if (expense.items.length === 0) return "Sin productos";
+  if (expense.items.length === 0) return "Gasto simple";
   const names = expense.items.slice(0, 2).map((item) => item.product_name).join(", ");
   if (expense.items.length <= 2) return names;
   return `${names} +${expense.items.length - 2}`;
@@ -124,23 +134,44 @@ const ExpenseForm: React.FC<{
   const [formData, setFormData] = React.useState<ExpenseFormData>(
     getExpenseFormData(selectedExpense)
   );
+  const [entryMode, setEntryMode] = React.useState<ExpenseEntryMode>(
+    getExpenseEntryMode(selectedExpense)
+  );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     setFormData(getExpenseFormData(selectedExpense));
+    setEntryMode(getExpenseEntryMode(selectedExpense));
   }, [selectedExpense, isOpen]);
 
   const comercioProducts = React.useMemo(
     () => products.filter((product) => product.comercio_id === formData.comercio_id),
     [products, formData.comercio_id]
   );
-  const total = React.useMemo(() => getExpenseTotal(formData.items), [formData.items]);
-  const isFormValid =
-    formData.comercio_id > 0 &&
+  const total = React.useMemo(
+    () =>
+      entryMode === "simple"
+        ? Number(formData.amount || 0)
+        : getExpenseItemsTotal(formData.items),
+    [entryMode, formData.amount, formData.items]
+  );
+  const hasValidProductItems =
     formData.items.length > 0 &&
     formData.items.every(
       (item) => item.product_name.trim().length > 0 && item.quantity > 0 && item.unit_price > 0
     );
+  const isFormValid =
+    formData.comercio_id > 0 &&
+    (entryMode === "simple" ? Number(formData.amount || 0) > 0 : hasValidProductItems);
+
+  const handleModeChange = (mode: ExpenseEntryMode) => {
+    setEntryMode(mode);
+    setFormData((current) => ({
+      ...current,
+      amount: mode === "simple" ? current.amount ?? 0 : null,
+      items: mode === "products" && current.items.length === 0 ? [createBlankItem()] : current.items,
+    }));
+  };
 
   const updateItem = (index: number, changes: Partial<ExpenseItemFormData>) => {
     setFormData((current) => ({
@@ -155,7 +186,7 @@ const ExpenseForm: React.FC<{
     setFormData((current) => ({
       ...current,
       comercio_id: Number(event.target.value),
-      items: [createBlankItem()],
+      items: entryMode === "products" ? [createBlankItem()] : [],
     }));
   };
 
@@ -190,17 +221,28 @@ const ExpenseForm: React.FC<{
     event.preventDefault();
     if (!isFormValid || isSubmitting) return;
 
-    const payload: ExpenseFormData = {
+    const basePayload = {
       comercio_id: formData.comercio_id,
       date: formData.date || null,
       description: formData.description?.trim() || null,
-      items: formData.items.map((item) => ({
-        product_id: item.product_id,
-        product_name: item.product_name.trim(),
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-      })),
     };
+    const payload: ExpenseFormData =
+      entryMode === "simple"
+        ? {
+            ...basePayload,
+            amount: Number(formData.amount),
+            items: [],
+          }
+        : {
+            ...basePayload,
+            amount: null,
+            items: formData.items.map((item) => ({
+              product_id: item.product_id,
+              product_name: item.product_name.trim(),
+              quantity: Number(item.quantity),
+              unit_price: Number(item.unit_price),
+            })),
+          };
 
     setIsSubmitting(true);
     try {
@@ -264,6 +306,31 @@ const ExpenseForm: React.FC<{
                     </div>
 
                     <div className="grid gap-5 px-6 py-6">
+                      <div>
+                        <span className="mb-2 block text-sm font-medium text-primary">
+                          Tipo de gasto
+                        </span>
+                        <div className="inline-flex rounded-md border border-subtle bg-surface-elevated p-1">
+                          {[
+                            { value: "simple" as const, label: "Gasto simple" },
+                            { value: "products" as const, label: "Con productos" },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => handleModeChange(option.value)}
+                              className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                                entryMode === option.value
+                                  ? "bg-surface text-primary shadow-sm"
+                                  : "text-secondary hover:text-primary"
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <div className="grid gap-5 sm:grid-cols-2">
                         <div>
                           <label htmlFor="comercio_id" className="mb-1.5 block text-sm font-medium text-primary">
@@ -318,17 +385,42 @@ const ExpenseForm: React.FC<{
                           placeholder="Opcional"
                         />
                       </div>
+
+                      {entryMode === "simple" && (
+                        <div>
+                          <label htmlFor="amount" className="mb-1.5 block text-sm font-medium text-primary">
+                            Monto <span className="text-danger">*</span>
+                          </label>
+                          <input
+                            id="amount"
+                            name="amount"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={formData.amount || ""}
+                            onChange={(event) =>
+                              setFormData((current) => ({
+                                ...current,
+                                amount: Number(event.target.value),
+                              }))
+                            }
+                            className="input-base"
+                            required={entryMode === "simple"}
+                          />
+                        </div>
+                      )}
                     </div>
                   </section>
 
-                  <section className="overflow-hidden rounded-xl shadow-sm surface-card">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4 border-subtle">
-                      <h3 className="text-base font-semibold text-primary">Productos</h3>
-                      <button type="button" onClick={addItem} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
-                        <Plus size={13} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
-                        Agregar producto
-                      </button>
-                    </div>
+                  {entryMode === "products" && (
+                    <section className="overflow-hidden rounded-xl shadow-sm surface-card">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4 border-subtle">
+                        <h3 className="text-base font-semibold text-primary">Productos</h3>
+                        <button type="button" onClick={addItem} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
+                          <Plus size={13} strokeWidth={2.5} aria-hidden="true" className="mr-1" />
+                          Agregar producto
+                        </button>
+                      </div>
 
                     <div className="divide-y divide-subtle">
                       {formData.items.map((item, index) => {
@@ -415,7 +507,8 @@ const ExpenseForm: React.FC<{
                         );
                       })}
                     </div>
-                  </section>
+                    </section>
+                  )}
                 </div>
               </div>
 

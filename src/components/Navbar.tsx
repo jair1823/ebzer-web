@@ -25,10 +25,10 @@ export const Navbar: React.FC = () => {
 
   const allNavItems = [
     { path: "/orders", label: "Pedidos", Icon: Package, adminOnly: false },
+    { path: "/expenses", label: "Gastos", Icon: ChartColumn, adminOnly: false },
     { path: "/agenda", label: "Agenda", Icon: CalendarDays, adminOnly: false },
     { path: "/insights", label: "Insights", Icon: ChartNoAxesCombined, adminOnly: false },
     { path: "/incomes", label: "Ingresos", Icon: CircleDollarSign, canShow: canManageIncomes },
-    { path: "/expenses", label: "Gastos", Icon: ChartColumn, adminOnly: false },
     { path: "/settings/statuses", label: "Estados", Icon: Settings, canShow: canManageOrderStatuses },
     { path: "/settings/users", label: "Usuarios", Icon: Users, canShow: canManageUsers },
   ];
