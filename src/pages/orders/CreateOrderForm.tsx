@@ -684,7 +684,7 @@ export const CreateOrderForm: React.FC = () => {
                             htmlFor="description"
                             className="mb-1.5 block text-sm font-medium text-primary"
                           >
-                            Pedido
+                            Pedido <span className="text-danger">*</span>
                           </label>
                           <input
                             id="description"
@@ -700,7 +700,7 @@ export const CreateOrderForm: React.FC = () => {
                           <p className="mt-1.5 text-xs text-secondary">
                             Resume el encargo en una sola línea clara.
                           </p>
-                          {!isFormValid && (
+                          {!formData.description.trim() && (
                             <p className="mt-2 text-xs font-medium text-danger">
                               El campo pedido es obligatorio.
                             </p>
