@@ -52,6 +52,7 @@ const createBlankItem = (): ExpenseItemFormData => ({
 });
 
 type ExpenseEntryMode = "simple" | "products";
+type CatalogMode = "comercios" | "products";
 
 const getExpenseEntryMode = (expense?: Expense | null): ExpenseEntryMode =>
   expense?.items.length ? "products" : "simple";
@@ -87,6 +88,8 @@ const getExpenseFormData = (expense?: Expense | null): ExpenseFormData => {
 
 const getExpenseItemsTotal = (items: ExpenseItemFormData[]) =>
   items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
+
+const isPositiveInteger = (value: number) => Number.isInteger(Number(value)) && Number(value) > 0;
 
 const getProductSummary = (expense: Expense) => {
   if (expense.items.length === 0) return "Gasto simple";
@@ -147,7 +150,7 @@ const ExpenseForm: React.FC<{
   const hasValidProductItems =
     formData.items.length > 0 &&
     formData.items.every(
-      (item) => item.product_name.trim().length > 0 && item.quantity > 0 && item.unit_price > 0
+      (item) => item.product_name.trim().length > 0 && isPositiveInteger(item.quantity) && item.unit_price > 0
     );
   const isFormValid =
     formData.comercio_id > 0 &&
@@ -446,8 +449,9 @@ const ExpenseForm: React.FC<{
                               <input
                                 id={`quantity-${index}`}
                                 type="number"
-                                min="0.01"
-                                step="0.01"
+                                min="1"
+                                step="1"
+                                inputMode="numeric"
                                 value={item.quantity || ""}
                                 onChange={(event) => updateItem(index, { quantity: Number(event.target.value) })}
                                 className="input-base"
@@ -593,6 +597,7 @@ const CatalogManager: React.FC<{
   });
   const [editingComercio, setEditingComercio] = React.useState<Comercio | null>(null);
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
+  const [catalogMode, setCatalogMode] = React.useState<CatalogMode>("comercios");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const comercioUsage = expenses.reduce<Record<number, number>>((totals, expense) => {
@@ -614,6 +619,15 @@ const CatalogManager: React.FC<{
   const resetProductForm = () => {
     setEditingProduct(null);
     setProductForm({ comercio_id: 0, name: "", default_price: 0 });
+  };
+
+  const handleCatalogModeChange = (mode: CatalogMode) => {
+    setCatalogMode(mode);
+    if (mode === "comercios") {
+      resetProductForm();
+    } else {
+      resetComercioForm();
+    }
   };
 
   const handleComercioSubmit = async (event: React.FormEvent) => {
@@ -680,10 +694,14 @@ const CatalogManager: React.FC<{
     if (!isOpen) {
       resetComercioForm();
       resetProductForm();
+      setCatalogMode("comercios");
     }
   }, [isOpen]);
 
   if (!isOpen || (!canCreateComercio && !canManageCatalog)) return null;
+
+  const showComerciosCatalog = !canManageCatalog || catalogMode === "comercios";
+  const showProductsCatalog = canManageCatalog && catalogMode === "products";
 
   return (
     <div className="fixed inset-0 z-50 backdrop-blur-sm m-0"  style={{ backgroundColor: "rgb(var(--background) / 0.8)" }}>
@@ -717,237 +735,266 @@ const CatalogManager: React.FC<{
           </div>
 
           <div className="flex-1 overflow-y-auto bg-background">
-            <div className={`grid gap-6 p-6 sm:p-8 ${canManageCatalog ? "lg:grid-cols-2" : ""}`}>
-              <div className="space-y-4">
-                {canCreateComercio && (
-                  <form onSubmit={handleComercioSubmit} className="grid gap-3">
+            <div className="grid gap-6 p-6 sm:p-8">
+              {canManageCatalog && (
+                <div>
+                  <span className="mb-2 block text-sm font-medium text-primary">
+                    Catalogo
+                  </span>
+                  <div className="inline-flex rounded-md border border-subtle bg-surface-elevated p-1">
+                    {[
+                      { value: "comercios" as const, label: "Comercios" },
+                      { value: "products" as const, label: "Productos" },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleCatalogModeChange(option.value)}
+                        className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                          catalogMode === option.value
+                            ? "bg-surface text-primary shadow-sm"
+                            : "text-secondary hover:text-primary"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showComerciosCatalog && (
+                <div className="space-y-4">
+                  {canCreateComercio && (
+                    <form onSubmit={handleComercioSubmit} className="grid gap-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-semibold text-primary">Comercios</h3>
+                        {editingComercio && canManageCatalog && (
+                          <button type="button" onClick={resetComercioForm} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
+                            Cancelar edicion
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        value={comercioForm.name}
+                        onChange={(event) => setComercioForm((current) => ({ ...current, name: event.target.value }))}
+                        className="input-base"
+                        placeholder="Nombre del Comercio"
+                        autoFocus
+                        required
+                      />
+                      <input
+                        value={comercioForm.description ?? ""}
+                        onChange={(event) => setComercioForm((current) => ({ ...current, description: event.target.value }))}
+                        className="input-base"
+                        placeholder="Descripcion opcional"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!comercioForm.name.trim() || isSubmitting}
+                        className="btn-base btn-primary rounded-md disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {editingComercio ? "Actualizar Comercio" : "Crear Comercio"}
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-subtle">
+                      <thead>
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Nombre</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Uso</th>
+                          {canManageCatalog && (
+                            <th className="relative px-3 py-2"><span className="sr-only">Acciones</span></th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-subtle">
+                        {comercios.map((comercio) => (
+                          <tr key={comercio.id}>
+                            <td className="px-3 py-3">
+                              <div className="text-sm font-medium text-primary">{comercio.name}</div>
+                              {comercio.description && (
+                                <div className="text-xs text-secondary">{comercio.description}</div>
+                              )}
+                            </td>
+                            <td className="px-3 py-3 text-sm text-secondary">{comercioUsage[comercio.id] ?? 0}</td>
+                            {canManageCatalog && (
+                              <td className="px-3 py-3">
+                                <div className="flex justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    title="Editar Comercio"
+                                    aria-label={`Editar Comercio ${comercio.name}`}
+                                    className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-primary"
+                                    onClick={() => {
+                                      setEditingComercio(comercio);
+                                      setComercioForm({
+                                        name: comercio.name,
+                                        description: comercio.description ?? "",
+                                      });
+                                    }}
+                                  >
+                                    <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Eliminar Comercio"
+                                    aria-label={`Eliminar Comercio ${comercio.name}`}
+                                    className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={(comercioUsage[comercio.id] ?? 0) > 0}
+                                    onClick={async () => {
+                                      try {
+                                        await deleteComercio(comercio.id);
+                                        showSuccess("Comercio eliminado");
+                                        if (editingComercio?.id === comercio.id) resetComercioForm();
+                                      } catch (error) {
+                                        showError((error as { message?: string })?.message ?? "Error al eliminar el Comercio");
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                        {catalogLoaded && !catalogLoading && comercios.length === 0 && (
+                          <tr>
+                            <td colSpan={canManageCatalog ? 3 : 2} className="px-3 py-6 text-center text-sm text-secondary">
+                              No hay Comercios registrados
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {showProductsCatalog && (
+                <div className="space-y-4">
+                  <form onSubmit={handleProductSubmit} className="grid gap-3">
                     <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-semibold text-primary">Comercios</h3>
-                      {editingComercio && canManageCatalog && (
-                        <button type="button" onClick={resetComercioForm} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
+                      <h3 className="text-sm font-semibold text-primary">Productos</h3>
+                      {editingProduct && (
+                        <button type="button" onClick={resetProductForm} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
                           Cancelar edicion
                         </button>
                       )}
                     </div>
-                    <input
-                      value={comercioForm.name}
-                      onChange={(event) => setComercioForm((current) => ({ ...current, name: event.target.value }))}
+                    <select
+                      value={productForm.comercio_id || ""}
+                      onChange={(event) => setProductForm((current) => ({ ...current, comercio_id: Number(event.target.value) }))}
                       className="input-base"
-                      placeholder="Nombre del Comercio"
-                      autoFocus
                       required
-                    />
-                    <input
-                      value={comercioForm.description ?? ""}
-                      onChange={(event) => setComercioForm((current) => ({ ...current, description: event.target.value }))}
-                      className="input-base"
-                      placeholder="Descripcion opcional"
-                    />
+                    >
+                      <option value="">Seleccionar Comercio</option>
+                      {comercios.map((comercio) => (
+                        <option key={comercio.id} value={comercio.id}>
+                          {comercio.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+                      <input
+                        value={productForm.name}
+                        onChange={(event) => setProductForm((current) => ({ ...current, name: event.target.value }))}
+                        className="input-base"
+                        placeholder="Nombre del producto"
+                        required
+                      />
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={productForm.default_price || ""}
+                        onChange={(event) => setProductForm((current) => ({ ...current, default_price: Number(event.target.value) }))}
+                        className="input-base"
+                        placeholder="Precio"
+                        required
+                      />
+                    </div>
                     <button
                       type="submit"
-                      disabled={!comercioForm.name.trim() || isSubmitting}
+                      disabled={!productForm.name.trim() || productForm.comercio_id <= 0 || productForm.default_price <= 0 || isSubmitting}
                       className="btn-base btn-primary rounded-md disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {editingComercio ? "Actualizar Comercio" : "Crear Comercio"}
+                      {editingProduct ? "Actualizar producto" : "Crear producto"}
                     </button>
                   </form>
-                )}
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-subtle">
-                  <thead>
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Nombre</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Uso</th>
-                      {canManageCatalog && (
-                        <th className="relative px-3 py-2"><span className="sr-only">Acciones</span></th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-subtle">
-                    {comercios.map((comercio) => (
-                      <tr key={comercio.id}>
-                        <td className="px-3 py-3">
-                          <div className="text-sm font-medium text-primary">{comercio.name}</div>
-                          {comercio.description && (
-                            <div className="text-xs text-secondary">{comercio.description}</div>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-sm text-secondary">{comercioUsage[comercio.id] ?? 0}</td>
-                        {canManageCatalog && (
-                          <td className="px-3 py-3">
-                            <div className="flex justify-end gap-1">
-                              <button
-                                type="button"
-                                title="Editar Comercio"
-                                aria-label={`Editar Comercio ${comercio.name}`}
-                                className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-primary"
-                                onClick={() => {
-                                  setEditingComercio(comercio);
-                                  setComercioForm({
-                                    name: comercio.name,
-                                    description: comercio.description ?? "",
-                                  });
-                                }}
-                              >
-                                <Pencil size={14} strokeWidth={2} aria-hidden="true" />
-                              </button>
-                              <button
-                                type="button"
-                                title="Eliminar Comercio"
-                                aria-label={`Eliminar Comercio ${comercio.name}`}
-                                className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
-                                disabled={(comercioUsage[comercio.id] ?? 0) > 0}
-                                onClick={async () => {
-                                  try {
-                                    await deleteComercio(comercio.id);
-                                    showSuccess("Comercio eliminado");
-                                    if (editingComercio?.id === comercio.id) resetComercioForm();
-                                  } catch (error) {
-                                    showError((error as { message?: string })?.message ?? "Error al eliminar el Comercio");
-                                  }
-                                }}
-                              >
-                                <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                    {catalogLoaded && !catalogLoading && comercios.length === 0 && (
-                      <tr>
-                        <td colSpan={canManageCatalog ? 3 : 2} className="px-3 py-6 text-center text-sm text-secondary">
-                          No hay Comercios registrados
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {canManageCatalog && (
-              <div className="space-y-4">
-                <form onSubmit={handleProductSubmit} className="grid gap-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-primary">Productos</h3>
-                    {editingProduct && (
-                      <button type="button" onClick={resetProductForm} className="btn-base btn-outline rounded-md text-xs px-3 py-1.5">
-                        Cancelar edicion
-                      </button>
-                    )}
-                  </div>
-                  <select
-                    value={productForm.comercio_id || ""}
-                    onChange={(event) => setProductForm((current) => ({ ...current, comercio_id: Number(event.target.value) }))}
-                    className="input-base"
-                    required
-                  >
-                    <option value="">Seleccionar Comercio</option>
-                    {comercios.map((comercio) => (
-                      <option key={comercio.id} value={comercio.id}>
-                        {comercio.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
-                    <input
-                      value={productForm.name}
-                      onChange={(event) => setProductForm((current) => ({ ...current, name: event.target.value }))}
-                      className="input-base"
-                      placeholder="Nombre del producto"
-                      required
-                    />
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={productForm.default_price || ""}
-                      onChange={(event) => setProductForm((current) => ({ ...current, default_price: Number(event.target.value) }))}
-                      className="input-base"
-                      placeholder="Precio"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!productForm.name.trim() || productForm.comercio_id <= 0 || productForm.default_price <= 0 || isSubmitting}
-                    className="btn-base btn-primary rounded-md disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {editingProduct ? "Actualizar producto" : "Crear producto"}
-                  </button>
-                </form>
-
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-subtle">
-                    <thead>
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Producto</th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Precio</th>
-                        <th className="relative px-3 py-2"><span className="sr-only">Acciones</span></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-subtle">
-                      {products.map((product) => (
-                        <tr key={product.id}>
-                          <td className="px-3 py-3">
-                            <div className="text-sm font-medium text-primary">{product.name}</div>
-                            <div className="text-xs text-secondary">{product.comercio?.name ?? "Sin Comercio"}</div>
-                          </td>
-                          <td className="px-3 py-3 text-sm text-secondary">{formatCurrency(product.default_price)}</td>
-                          <td className="px-3 py-3">
-                            <div className="flex justify-end gap-1">
-                              <button
-                                type="button"
-                                title="Editar producto"
-                                aria-label={`Editar producto ${product.name}`}
-                                className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-primary"
-                                onClick={() => {
-                                  setEditingProduct(product);
-                                  setProductForm({
-                                    comercio_id: product.comercio_id,
-                                    name: product.name,
-                                    default_price: product.default_price,
-                                  });
-                                }}
-                              >
-                                <Pencil size={14} strokeWidth={2} aria-hidden="true" />
-                              </button>
-                              <button
-                                type="button"
-                                title="Eliminar producto"
-                                aria-label={`Eliminar producto ${product.name}`}
-                                className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
-                                disabled={(productUsage[product.id] ?? 0) > 0}
-                                onClick={async () => {
-                                  try {
-                                    await deleteProduct(product.id);
-                                    showSuccess("Producto eliminado");
-                                    if (editingProduct?.id === product.id) resetProductForm();
-                                  } catch (error) {
-                                    showError((error as { message?: string })?.message ?? "Error al eliminar el producto");
-                                  }
-                                }}
-                              >
-                                <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {products.length === 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-subtle">
+                      <thead>
                         <tr>
-                          <td colSpan={3} className="px-3 py-6 text-center text-sm text-secondary">
-                            No hay productos registrados
-                          </td>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Producto</th>
+                          <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-secondary">Precio</th>
+                          <th className="relative px-3 py-2"><span className="sr-only">Acciones</span></th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-subtle">
+                        {products.map((product) => (
+                          <tr key={product.id}>
+                            <td className="px-3 py-3">
+                              <div className="text-sm font-medium text-primary">{product.name}</div>
+                              <div className="text-xs text-secondary">{product.comercio?.name ?? "Sin Comercio"}</div>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-secondary">{formatCurrency(product.default_price)}</td>
+                            <td className="px-3 py-3">
+                              <div className="flex justify-end gap-1">
+                                <button
+                                  type="button"
+                                  title="Editar producto"
+                                  aria-label={`Editar producto ${product.name}`}
+                                  className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-primary"
+                                  onClick={() => {
+                                    setEditingProduct(product);
+                                    setProductForm({
+                                      comercio_id: product.comercio_id,
+                                      name: product.name,
+                                      default_price: product.default_price,
+                                    });
+                                  }}
+                                >
+                                  <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Eliminar producto"
+                                  aria-label={`Eliminar producto ${product.name}`}
+                                  className="rounded-md p-1.5 text-secondary transition-colors hover:bg-surface-elevated hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                                  disabled={(productUsage[product.id] ?? 0) > 0}
+                                  onClick={async () => {
+                                    try {
+                                      await deleteProduct(product.id);
+                                      showSuccess("Producto eliminado");
+                                      if (editingProduct?.id === product.id) resetProductForm();
+                                    } catch (error) {
+                                      showError((error as { message?: string })?.message ?? "Error al eliminar el producto");
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {products.length === 0 && (
+                          <tr>
+                            <td colSpan={3} className="px-3 py-6 text-center text-sm text-secondary">
+                              No hay productos registrados
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             </div>
           </div>
 
